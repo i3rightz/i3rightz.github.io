@@ -465,20 +465,25 @@ function getRateForPeriod(period){
   return rec?rec.rate:AVG_RATE;
 }
 
-// Compute total savings dynamically using per-month PEA rate
-function computeTotalSavings(){
-  return DB.solar.reduce((sum,s)=>sum+s.self_consumption*getRateForPeriod(s.period),0);
-}
-
-// Compute annual savings using per-month rate
+// Compute annual savings: อัตรา (ปัดเศษ 2 ตำแหน่ง) × PV Yield → คูณกลับได้ตรงในตาราง
 function computeAnnualSavings(){
+  const annual=computeAnnual();
+  const solarByYear=computeSolarByYear();
   const byYear={};
-  DB.solar.forEach(s=>{
-    const yr=parseInt(s.period.split('-')[0]);
-    if(!byYear[yr]) byYear[yr]=0;
-    byYear[yr]+=s.self_consumption*getRateForPeriod(s.period);
+  annual.forEach(d=>{
+    const s=solarByYear[d.year];
+    if(s&&s.pv>0){
+      const rawRate=d.total_kva>0?d.total_cost/d.total_kva:d.avg_rate;
+      const rate2dp=Math.round(rawRate*100)/100; // ปัดเศษ 2 ตำแหน่ง ให้ตรงกับที่แสดงในตาราง
+      byYear[d.year]=Math.round(s.pv*rate2dp);
+    }
   });
   return byYear;
+}
+
+// Compute total savings: sum of annual savings
+function computeTotalSavings(){
+  return Object.values(computeAnnualSavings()).reduce((a,b)=>a+b,0);
 }
 const SOLAR_START='2022-06';
 
@@ -799,8 +804,10 @@ function renderTables(){
     const s=solarByYear[d.year];
     const pv=s?fmt(Math.round(s.pv)):'-';
     const annSav2=computeAnnualSavings();const sv=s?`<strong style="color:#1e8449">${fmt(Math.round(annSav2[d.year]||0))}</strong>`:'-';
+    // อัตราเฉลี่ยทั้งปี = total_cost / total_kva (ใช้คำนวณประหยัด: อัตรา × PV Yield = ประหยัด)
+    const annRate=d.total_kva>0?(d.total_cost/d.total_kva).toFixed(2):d.avg_rate.toFixed(2);
     const note=d.year<2022?'<span class="tag tag-pre">ก่อน Solar</span>':d.year===2022?'<span class="tag tag-solar">เริ่ม Solar</span>':'<span class="tag tag-solar">มี Solar</span>';
-    cb.innerHTML+=`<tr><td>${d.year}${d.months<12?` (${d.months}ด)`:''}</td><td class="num">${fmt(Math.round(d.total_cost))}</td><td class="num">${fmt(d.total_kva)}</td><td class="num">${d.avg_rate.toFixed(2)}</td><td class="num">${pv}</td><td class="num">${sv}</td><td>${note}</td></tr>`;
+    cb.innerHTML+=`<tr><td>${d.year}${d.months<12?` (${d.months}ด)`:''}</td><td class="num">${fmt(Math.round(d.total_cost))}</td><td class="num">${fmt(d.total_kva)}</td><td class="num">${annRate}</td><td class="num">${pv}</td><td class="num">${sv}</td><td>${note}</td></tr>`;
   });
 
   // PEA table
@@ -1044,4 +1051,4 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 </script>
 </body>
-</html>
+</html>              
