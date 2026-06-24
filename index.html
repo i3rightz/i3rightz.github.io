@@ -3,531 +3,1031 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard การใช้พลังงาน — สำนักงาน ปท.8 ท่าม่วง</title>
+<title>Dashboard พลังงาน — ปท.8 ท่าม่วง</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root {
+:root{
   --blue-dark:#1a3a5c;--blue:#2471a3;--blue-light:#d6eaf8;
-  --green:#1e8449;--green-light:#d5f5e3;
-  --orange:#d68910;--orange-light:#fef9e7;
-  --red:#c0392b;--red-light:#fadbd8;
-  --purple:#7d3c98;
-  --gray-bg:#f4f6f9;--gray-border:#dce3ea;
-  --text:#1c2833;--text-muted:#566573;
+  --green:#1e8449;--orange:#d68910;--red:#c0392b;--purple:#7d3c98;
+  --gray-bg:#f4f6f9;--gray-border:#dce3ea;--text:#1c2833;--text-muted:#566573;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI','Noto Sans Thai',Arial,sans-serif;background:var(--gray-bg);color:var(--text);font-size:14px}
-.header{background:linear-gradient(135deg,#1a3a5c 0%,#2471a3 100%);color:white;padding:18px 28px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-.header-icon{font-size:34px}
-.header h1{font-size:19px;font-weight:700;line-height:1.3}
-.header p{font-size:12px;opacity:.8;margin-top:2px}
-.header-right{margin-left:auto;text-align:right;font-size:12px;opacity:.85}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#1a3a5c 0%,#2471a3 100%);color:white;padding:16px 26px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.header-icon{font-size:32px}
+.header h1{font-size:18px;font-weight:700;line-height:1.3}
+.header p{font-size:11px;opacity:.8;margin-top:2px}
+.header-right{margin-left:auto;text-align:right;font-size:11px;opacity:.85}
 .header-right strong{font-size:13px;display:block}
-.kpi-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:14px 22px;background:white;border-bottom:1px solid var(--gray-border)}
-.kpi-card{background:var(--gray-bg);border-radius:10px;padding:12px 14px;border-left:4px solid var(--blue);position:relative}
+.header-badge{background:rgba(255,255,255,0.2);border-radius:6px;padding:2px 8px;font-size:10px;margin-top:4px;display:inline-block}
+
+/* DATA STATUS BAR */
+.status-bar{background:#1a5276;color:white;padding:5px 26px;display:flex;align-items:center;gap:16px;font-size:11px}
+.status-bar .sb-item{display:flex;align-items:center;gap:5px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#2ecc71;flex-shrink:0}
+.status-dot.warn{background:#f39c12}
+.status-dot.base{background:#aab7b8}
+
+/* KPI */
+.kpi-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:12px 22px;background:white;border-bottom:1px solid var(--gray-border)}
+.kpi-card{background:var(--gray-bg);border-radius:10px;padding:11px 13px;border-left:4px solid var(--blue);position:relative}
 .kpi-card.green{border-color:var(--green)}.kpi-card.orange{border-color:var(--orange)}.kpi-card.purple{border-color:var(--purple)}
-.kpi-label{font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-.kpi-value{font-size:21px;font-weight:800;margin:4px 0 2px;line-height:1}
+.kpi-label{font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.kpi-value{font-size:20px;font-weight:800;margin:3px 0 2px;line-height:1}
 .kpi-sub{font-size:10px;color:var(--text-muted)}
-.kpi-badge{position:absolute;top:8px;right:8px;font-size:10px;padding:2px 6px;border-radius:20px;font-weight:700}
+.kpi-badge{position:absolute;top:7px;right:7px;font-size:9px;padding:2px 5px;border-radius:10px;font-weight:700}
 .badge-down{background:#d5f5e3;color:#1e8449}.badge-up{background:#fadbd8;color:#c0392b}
+
+/* TABS */
 .tab-bar{display:flex;padding:0 22px;background:white;border-bottom:2px solid var(--gray-border);overflow-x:auto}
-.tab{padding:11px 18px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-muted);border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .2s}
+.tab{padding:10px 16px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-muted);border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .2s}
 .tab:hover{color:var(--blue)}.tab.active{color:var(--blue);border-bottom-color:var(--blue);background:#f0f7ff}
-.content{padding:18px 22px}
+.tab.import-tab.active{color:#27ae60;border-bottom-color:#27ae60;background:#eafaf1}
+.tab.import-tab{color:#27ae60}
+
+/* CONTENT */
+.content{padding:16px 22px}
 .tab-panel{display:none}.tab-panel.active{display:block}
-.section-title{font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid var(--blue-light)}
+.card{background:white;border-radius:12px;padding:15px;box-shadow:0 1px 5px rgba(0,0,0,.07);border:1px solid var(--gray-border);margin-bottom:14px}
+.card-title{font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.col-full{grid-column:1/-1}
-.card{background:white;border-radius:12px;padding:16px;box-shadow:0 1px 5px rgba(0,0,0,.07);border:1px solid var(--gray-border);margin-bottom:0}
-.card-title{font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px}
-.chart-container{position:relative;height:270px}
-.chart-container.tall{height:330px}
-.chart-container.short{height:190px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.chart-container{position:relative;height:260px}
+.chart-container.tall{height:320px}
+.chart-container.short{height:180px}
+
+/* LEGEND */
 .legend-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;font-size:11px}
 .legend-item{display:flex;align-items:center;gap:4px}
-.legend-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .legend-line{width:18px;height:3px;border-radius:2px;flex-shrink:0}
-.insight-box{background:linear-gradient(135deg,#eaf4fb,#d6eaf8);border:1px solid #aed6f1;border-radius:9px;padding:12px 14px;margin-top:10px;font-size:12px;line-height:1.7}
+
+/* INSIGHT */
+.insight-box{background:linear-gradient(135deg,#eaf4fb,#d6eaf8);border:1px solid #aed6f1;border-radius:8px;padding:10px 13px;margin-top:8px;font-size:12px;line-height:1.7}
 .insight-box strong{color:var(--blue-dark)}
 .insight-green{background:linear-gradient(135deg,#eafaf1,#d5f5e3);border-color:#a9dfbf}
 .insight-orange{background:linear-gradient(135deg,#fef9e7,#fdebd0);border-color:#f0b27a}
+
+/* COMPARE */
 .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
-.compare-card{border-radius:9px;padding:14px;text-align:center}
+.compare-card{border-radius:9px;padding:13px;text-align:center}
 .compare-card.pre{background:#f2f3f4;border:2px solid #bdc3c7}
 .compare-card.post{background:#eafaf1;border:2px solid #a9dfbf}
-.compare-card .era{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:5px}
-.compare-card .val{font-size:24px;font-weight:800}
-.compare-card.pre .val{color:#555}
-.compare-card.post .val{color:var(--green)}
+.compare-card .era{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px}
+.compare-card .val{font-size:22px;font-weight:800}
+.compare-card.pre .val{color:#555}.compare-card.post .val{color:var(--green)}
 .compare-card .sub{font-size:10px;color:var(--text-muted);margin-top:3px}
+
+/* GAUGE */
 .gauge-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:8px}
 .gauge-item{text-align:center;padding:10px 6px;background:#f8fafc;border-radius:8px}
-.gauge-num{font-size:26px;font-weight:800}
+.gauge-num{font-size:24px;font-weight:800}
 .gauge-label{font-size:10px;color:var(--text-muted);margin-top:2px}
-.table-wrap{max-height:400px;overflow-y:auto;border-radius:8px;border:1px solid var(--gray-border)}
+
+/* TABLE */
+.table-wrap{max-height:380px;overflow-y:auto;border-radius:8px;border:1px solid var(--gray-border)}
 .data-table{width:100%;border-collapse:collapse;font-size:11px}
-.data-table th{background:var(--blue-dark);color:white;padding:7px 10px;text-align:left;font-weight:600;position:sticky;top:0;z-index:1}
-.data-table td{padding:6px 10px;border-bottom:1px solid var(--gray-border)}
+.data-table th{background:var(--blue-dark);color:white;padding:7px 9px;text-align:left;font-weight:600;position:sticky;top:0;z-index:1}
+.data-table td{padding:5px 9px;border-bottom:1px solid var(--gray-border)}
 .data-table tr:nth-child(even) td{background:#f8fafc}
 .data-table tr:hover td{background:var(--blue-light)}
 .data-table .num{text-align:right;font-variant-numeric:tabular-nums}
 .tag{display:inline-block;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:700}
-.tag-solar{background:#fdebd0;color:#d35400}.tag-pea{background:#d6eaf8;color:#1a5276}.tag-pre{background:#f0f0f0;color:#555}
+.tag-solar{background:#fdebd0;color:#d35400}.tag-pre{background:#f0f0f0;color:#555}
+
+/* REC GRID */
 .rec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
 .rec-card{border-radius:9px;padding:12px;font-size:12px;line-height:1.7}
 .rec-card ul{padding-left:14px}
-.footer{text-align:center;padding:14px;font-size:10px;color:var(--text-muted);border-top:1px solid var(--gray-border);background:white;margin-top:18px}
-@media(max-width:900px){.kpi-bar{grid-template-columns:repeat(3,1fr)}.grid-2,.grid-3{grid-template-columns:1fr}.compare-grid{grid-template-columns:1fr}.gauge-row{grid-template-columns:repeat(2,1fr)}.rec-grid{grid-template-columns:1fr}}
+
+/* ===== IMPORT TAB ===== */
+.import-header{background:linear-gradient(135deg,#0e6655,#1e8449);color:white;border-radius:12px;padding:18px 22px;margin-bottom:16px;display:flex;align-items:center;gap:14px}
+.import-header .ih-icon{font-size:40px}
+.import-header h2{font-size:17px;font-weight:700}
+.import-header p{font-size:12px;opacity:.85;margin-top:3px}
+
+.drop-zones{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.drop-zone{border:2px dashed #a9dfbf;border-radius:14px;padding:28px 20px;text-align:center;cursor:pointer;background:white;transition:all .25s;position:relative}
+.drop-zone:hover,.drop-zone.drag-over{border-color:#1e8449;background:#eafaf1;transform:scale(1.01)}
+.drop-zone.success{border-color:#1e8449;border-style:solid;background:#eafaf1}
+.drop-zone.error{border-color:#e74c3c;border-style:solid;background:#fdedec}
+.dz-icon{font-size:40px;margin-bottom:10px}
+.dz-title{font-size:15px;font-weight:700;color:var(--blue-dark);margin-bottom:5px}
+.dz-sub{font-size:12px;color:var(--text-muted);line-height:1.6}
+.dz-status{font-size:12px;margin-top:10px;font-weight:600;padding:6px 12px;border-radius:8px}
+.dz-status.ok{background:#d5f5e3;color:#1e8449}
+.dz-status.err{background:#fadbd8;color:#c0392b}
+.dz-status.loading{background:#fef9e7;color:#d68910}
+.dz-btn{display:inline-block;margin-top:12px;padding:8px 18px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#1e8449;color:white;transition:background .2s}
+.dz-btn:hover{background:#17703d}
+.dz-btn.secondary{background:#2471a3}
+.dz-btn.secondary:hover{background:#1a5276}
+.dz-btn.danger{background:#c0392b}
+.dz-btn.danger:hover{background:#922b21}
+.dz-input{display:none}
+
+.import-log-card{margin-bottom:16px}
+.log-list{max-height:200px;overflow-y:auto}
+.log-item{display:flex;align-items:flex-start;gap:10px;padding:8px 12px;border-bottom:1px solid var(--gray-border);font-size:12px}
+.log-item:last-child{border-bottom:none}
+.log-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.log-text{flex:1}
+.log-time{font-size:10px;color:var(--text-muted);white-space:nowrap}
+.log-empty{text-align:center;color:var(--text-muted);padding:20px;font-size:12px}
+
+.import-tips{background:linear-gradient(135deg,#eaf4fb,#d6eaf8);border:1px solid #aed6f1;border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.import-tips h4{font-size:13px;font-weight:700;color:var(--blue-dark);margin-bottom:8px}
+.import-tips ul{padding-left:16px;font-size:12px;line-height:2}
+
+.actions-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* PROGRESS */
+.progress-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center}
+.progress-overlay.show{display:flex}
+.progress-box{background:white;border-radius:16px;padding:28px 36px;text-align:center;min-width:280px;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.progress-box .pb-icon{font-size:48px;margin-bottom:12px}
+.progress-box h3{font-size:16px;font-weight:700;color:var(--blue-dark)}
+.progress-box p{font-size:12px;color:var(--text-muted);margin-top:6px}
+.spinner{width:36px;height:36px;border:4px solid #d6eaf8;border-top-color:#2471a3;border-radius:50%;animation:spin .8s linear infinite;margin:10px auto 0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:#1e8449;color:white;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:2000;transform:translateY(80px);opacity:0;transition:all .35s;max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.error{background:#c0392b}
+.toast.warn{background:#d68910}
+
+/* FOOTER */
+.footer{text-align:center;padding:12px;font-size:10px;color:var(--text-muted);border-top:1px solid var(--gray-border);background:white;margin-top:16px}
+
+@media(max-width:900px){.kpi-bar{grid-template-columns:repeat(3,1fr)}.grid-2,.grid-3,.drop-zones{grid-template-columns:1fr}.gauge-row{grid-template-columns:repeat(2,1fr)}.rec-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
+<!-- PROGRESS OVERLAY -->
+<div class="progress-overlay" id="progressOverlay">
+  <div class="progress-box">
+    <div class="pb-icon">&#x1F4CA;</div>
+    <h3 id="progressTitle">กำลังประมวลผล...</h3>
+    <p id="progressMsg">กรุณารอสักครู่</p>
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- HEADER -->
 <div class="header">
   <div class="header-icon">&#x26A1;</div>
   <div>
     <h1>Dashboard การใช้พลังงานไฟฟ้า</h1>
-    <p>สำนักงาน ปท.8 ท่าม่วง &nbsp;|&nbsp; Main PEA (มิเตอร์หลัก) + Solar Cell อาคาร B1 (134.07 kWp)</p>
+    <p>สำนักงาน ปท.8 ท่าม่วง &nbsp;|&nbsp; Main PEA + Solar Cell อาคาร B1 (134.07 kWp)</p>
   </div>
   <div class="header-right">
-    <strong>ข้อมูล: 2559 &ndash; 2569</strong>
-    Solar ติดตั้ง: มิ.ย. 2565<br>
-    ขนาดระบบ: 134.07 kWp
+    <strong id="hdr-range">ข้อมูล: 2559 &ndash; 2569</strong>
+    <span class="header-badge" id="hdr-source">&#x1F4BE; Baseline</span>
   </div>
 </div>
 
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="sb-item"><div class="status-dot" id="dot-pea"></div> Main PEA: <strong id="sb-pea">— รายการ</strong></div>
+  <div class="sb-item"><div class="status-dot" id="dot-solar"></div> Solar B1: <strong id="sb-solar">— รายการ</strong></div>
+  <div class="sb-item" style="margin-left:auto;font-size:10px;opacity:.7" id="sb-update">อัปเดตล่าสุด: —</div>
+</div>
+
+<!-- KPI BAR -->
 <div class="kpi-bar">
   <div class="kpi-card">
     <div class="kpi-label">Main PEA รวม 10 ปี</div>
-    <div class="kpi-value" style="color:var(--blue)">3.01M</div>
+    <div class="kpi-value" style="color:var(--blue)" id="kpi-total-kva">—</div>
     <div class="kpi-sub">kVA (2559&ndash;2568)</div>
-    <span class="kpi-badge badge-down">&minus;4.1%</span>
   </div>
   <div class="kpi-card green">
     <div class="kpi-label">Solar ผลิตรวม</div>
-    <div class="kpi-value" style="color:var(--green)">303,269</div>
-    <div class="kpi-sub">kWh (มิ.ย.65&ndash;พ.ค.69)</div>
+    <div class="kpi-value" style="color:var(--green)" id="kpi-solar-total">—</div>
+    <div class="kpi-sub">kWh ตั้งแต่ มิ.ย.65</div>
   </div>
   <div class="kpi-card orange">
     <div class="kpi-label">ประหยัดค่าไฟ (ประมาณ)</div>
-    <div class="kpi-value" style="color:var(--orange)">1.43 ล้าน</div>
-    <div class="kpi-sub">บาท จาก Self-consumption</div>
-    <span class="kpi-badge badge-down">&#x2193; ลด</span>
+    <div class="kpi-value" style="color:var(--orange)" id="kpi-savings">—</div>
+    <div class="kpi-sub">บาท</div>
+    <span class="kpi-badge badge-down">&#x2193;</span>
   </div>
   <div class="kpi-card green">
     <div class="kpi-label">CO&#x2082; ที่ลดได้</div>
-    <div class="kpi-value" style="color:var(--green)">144.05</div>
+    <div class="kpi-value" style="color:var(--green)" id="kpi-co2">—</div>
     <div class="kpi-sub">ตัน CO&#x2082; สะสม</div>
   </div>
   <div class="kpi-card purple">
     <div class="kpi-label">Self-consumption Rate</div>
-    <div class="kpi-value" style="color:var(--purple)">~100%</div>
-    <div class="kpi-sub">ใช้ Solar ในอาคาร B1 ทั้งหมด</div>
+    <div class="kpi-value" style="color:var(--purple)" id="kpi-self-rate">—</div>
+    <div class="kpi-sub">ใช้ Solar ใน B1</div>
   </div>
 </div>
 
+<!-- TAB BAR -->
 <div class="tab-bar">
-  <div class="tab active" onclick="switchTab('overview',this)">&#x1F4CA; ภาพรวมการใช้พลังงาน</div>
-  <div class="tab" onclick="switchTab('compare',this)">&#x2696;&#xFE0F; เปรียบเทียบ ก่อน/หลัง Solar</div>
-  <div class="tab" onclick="switchTab('solar',this)">&#x2600;&#xFE0F; ประสิทธิภาพ Solar B1</div>
-  <div class="tab" onclick="switchTab('cost',this)">&#x1F4B0; วิเคราะห์ค่าใช้จ่าย</div>
+  <div class="tab active" onclick="switchTab('overview',this)">&#x1F4CA; ภาพรวม</div>
+  <div class="tab" onclick="switchTab('compare',this)">&#x2696;&#xFE0F; ก่อน/หลัง Solar</div>
+  <div class="tab" onclick="switchTab('solar',this)">&#x2600;&#xFE0F; Solar B1</div>
+  <div class="tab" onclick="switchTab('cost',this)">&#x1F4B0; ค่าใช้จ่าย</div>
   <div class="tab" onclick="switchTab('table',this)">&#x1F4CB; ข้อมูลรายเดือน</div>
+  <div class="tab import-tab" onclick="switchTab('import',this)">&#x1F4E5; นำเข้าข้อมูล</div>
 </div>
 
 <div class="content">
 
-<!-- TAB 1: OVERVIEW -->
+<!-- TAB: OVERVIEW -->
 <div id="tab-overview" class="tab-panel active">
-  <div style="margin-bottom:14px">
-    <div class="card col-full">
-      <div class="card-title">แนวโน้มการใช้ไฟฟ้า Main PEA รายเดือน (2559&ndash;2569) — เส้นแบ่งช่วงก่อน/หลังติดตั้ง Solar</div>
-      <div class="legend-row">
-        <div class="legend-item"><div class="legend-line" style="background:#2471a3"></div> ก่อน Solar (2559&ndash;2564)</div>
-        <div class="legend-item"><div class="legend-line" style="background:#27ae60"></div> หลัง Solar (2565&ndash;ปัจจุบัน)</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#e74c3c"></div> เส้นแบ่ง: ติดตั้ง Solar (มิ.ย. 65)</div>
-      </div>
-      <div class="chart-container tall"><canvas id="chartMainTrend"></canvas></div>
-      <div class="insight-box">
-        &#x1F4A1; <strong>ข้อสังเกต:</strong> การใช้ไฟ Main PEA มีแนวโน้ม<strong>ลดลง</strong>หลังติดตั้ง Solar จากเฉลี่ย <strong>25,440 kVA/เดือน</strong> (ก่อน Solar) เหลือ <strong>24,403 kVA/เดือน</strong> (หลัง Solar) ลดลงราว <strong>4.1%</strong> แม้อัตราค่าไฟจะปรับสูงขึ้น — ยอด Peak สูงสุดลดลงชัดเจนในปี 2567&ndash;2568
-      </div>
+  <div class="card">
+    <div class="card-title">แนวโน้มการใช้ไฟฟ้า Main PEA รายเดือน — เส้นแบ่งก่อน/หลังติดตั้ง Solar</div>
+    <div class="legend-row">
+      <div class="legend-item"><div class="legend-line" style="background:#2471a3"></div>ก่อน Solar</div>
+      <div class="legend-item"><div class="legend-line" style="background:#27ae60"></div>หลัง Solar</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e74c3c"></div>เส้นแบ่ง: ติดตั้ง Solar</div>
     </div>
+    <div class="chart-container tall"><canvas id="chartMainTrend"></canvas></div>
+    <div class="insight-box" id="insightOverview">&#x1F4A1; กำลังโหลดข้อมูล...</div>
   </div>
   <div class="grid-2">
     <div class="card">
-      <div class="card-title">สรุปรายปี — การใช้ไฟฟ้า Main PEA รวม (kVA)</div>
+      <div class="card-title">รายปี — Main PEA รวม (kVA)</div>
       <div class="chart-container"><canvas id="chartAnnualKVA"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-title">อัตราค่าไฟ (บาท/kVA) รายปี — แนวโน้มขาขึ้น</div>
+      <div class="card-title">อัตราค่าไฟเฉลี่ย (฿/kVA) รายปี</div>
       <div class="chart-container"><canvas id="chartRate"></canvas></div>
-      <div class="insight-box insight-orange" style="margin-top:8px">
-        &#x1F4C8; <strong>อัตราค่าไฟ</strong> ปรับขึ้นจาก <strong>3.93</strong> (2559) เป็น <strong>4.60 บาท/kVA</strong> (2568) เพิ่ม <strong>17%</strong> ใน 10 ปี — Solar ช่วยชะลอต้นทุน
-      </div>
     </div>
   </div>
 </div>
 
-<!-- TAB 2: COMPARE -->
+<!-- TAB: COMPARE -->
 <div id="tab-compare" class="tab-panel">
   <div class="grid-2" style="margin-bottom:14px">
     <div class="card">
-      <div class="card-title">เฉลี่ยต่อเดือน Main PEA — ก่อน vs หลัง Solar</div>
+      <div class="card-title">เฉลี่ยต่อเดือน — ก่อน vs หลัง Solar</div>
       <div class="compare-grid">
         <div class="compare-card pre">
-          <div class="era">&#x1F50C; ก่อน Solar (2559&ndash;2564)</div>
-          <div class="val">25,440</div>
+          <div class="era">&#x1F50C; ก่อน Solar</div>
+          <div class="val" id="cmp-pre-kva">—</div>
           <div class="sub">kVA เฉลี่ย/เดือน</div>
-          <div class="sub" style="margin-top:5px">ค่าไฟเฉลี่ย 102,621 ฿/เดือน</div>
+          <div class="sub" style="margin-top:4px" id="cmp-pre-cost">—</div>
         </div>
         <div class="compare-card post">
-          <div class="era">&#x2600;&#xFE0F; หลัง Solar (มิ.ย.65&ndash;ปัจจุบัน)</div>
-          <div class="val">24,403</div>
+          <div class="era">&#x2600;&#xFE0F; หลัง Solar</div>
+          <div class="val" id="cmp-post-kva">—</div>
           <div class="sub">kVA เฉลี่ย/เดือน</div>
-          <div class="sub" style="margin-top:5px">ค่าไฟเฉลี่ย 115,141 ฿/เดือน</div>
+          <div class="sub" style="margin-top:4px" id="cmp-post-cost">—</div>
         </div>
       </div>
-      <div class="insight-box insight-orange" style="margin-top:10px">
-        &#x26A0;&#xFE0F; <strong>ค่าไฟ Main PEA หลัง Solar สูงขึ้น</strong> เนื่องจากอัตราค่าไฟปรับขึ้นมาก ไม่ใช่เพราะใช้ไฟมากขึ้น — Solar ช่วย<strong>ชะลอการเพิ่มขึ้น</strong>ของค่าใช้จ่าย
-      </div>
+      <div class="insight-box insight-orange" style="margin-top:10px" id="insightCompare">กำลังโหลด...</div>
     </div>
     <div class="card">
-      <div class="card-title">สัดส่วนพลังงาน อาคาร B1 (เฉลี่ยรายเดือน)</div>
+      <div class="card-title">สัดส่วนพลังงาน B1 (เฉลี่ยรวม)</div>
       <div class="chart-container"><canvas id="chartB1Donut"></canvas></div>
     </div>
   </div>
-
   <div class="card" style="margin-bottom:14px">
-    <div class="card-title">เปรียบเทียบรายปี — Main PEA (เส้น) vs B1 Import Grid (แดง) vs B1 Solar (ส้ม)</div>
+    <div class="card-title">รายปี — Main PEA (เส้น) vs B1 Import Grid (แดง) vs B1 Solar (ส้ม)</div>
     <div class="legend-row">
-      <div class="legend-item"><div class="legend-line" style="background:#2471a3"></div> Main PEA รวม (kVA)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#e74c3c"></div> B1 Import จาก Grid (kWh)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#f39c12"></div> B1 Solar Self-use (kWh)</div>
+      <div class="legend-item"><div class="legend-line" style="background:#2471a3"></div>Main PEA (kVA)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e74c3c"></div>B1 Import Grid (kWh)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f39c12"></div>B1 Solar Self-use (kWh)</div>
     </div>
     <div class="chart-container tall"><canvas id="chartYearCompare"></canvas></div>
   </div>
-
   <div class="grid-3">
-    <div class="card">
-      <div class="card-title">&#x1F4CA; สัดส่วน B1 ปี 2565 (6 เดือน)</div>
-      <div class="chart-container short"><canvas id="chartPie2022"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">&#x1F4CA; สัดส่วน B1 ปี 2567 (เต็มปี)</div>
-      <div class="chart-container short"><canvas id="chartPie2024"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">&#x1F4CA; สัดส่วน B1 ปี 2568 (เต็มปี)</div>
-      <div class="chart-container short"><canvas id="chartPie2025"></canvas></div>
-    </div>
+    <div class="card"><div class="card-title">สัดส่วน B1 ปี 2565</div><div class="chart-container short"><canvas id="chartPie2022"></canvas></div></div>
+    <div class="card"><div class="card-title">สัดส่วน B1 ปี 2567</div><div class="chart-container short"><canvas id="chartPie2024"></canvas></div></div>
+    <div class="card"><div class="card-title">สัดส่วน B1 ปี 2568</div><div class="chart-container short"><canvas id="chartPie2025"></canvas></div></div>
   </div>
 </div>
 
-<!-- TAB 3: SOLAR -->
+<!-- TAB: SOLAR -->
 <div id="tab-solar" class="tab-panel">
   <div class="card" style="margin-bottom:14px">
     <div class="card-title">สรุปประสิทธิภาพ Solar Cell อาคาร B1 — 134.07 kWp</div>
     <div class="gauge-row">
-      <div class="gauge-item"><div class="gauge-num" style="color:var(--orange)">303,269</div><div class="gauge-label">kWh ผลิตรวม</div></div>
-      <div class="gauge-item"><div class="gauge-num" style="color:var(--green)">~100%</div><div class="gauge-label">Self-consumption Rate</div></div>
-      <div class="gauge-item"><div class="gauge-num" style="color:#7d3c98">144.05</div><div class="gauge-label">ตัน CO&#x2082; ลดได้</div></div>
-      <div class="gauge-item"><div class="gauge-num" style="color:var(--red)">1.43M</div><div class="gauge-label">บาท ประหยัดได้</div></div>
+      <div class="gauge-item"><div class="gauge-num" style="color:var(--orange)" id="g-pv">—</div><div class="gauge-label">kWh ผลิตรวม</div></div>
+      <div class="gauge-item"><div class="gauge-num" style="color:var(--green)" id="g-rate">~100%</div><div class="gauge-label">Self-consumption Rate</div></div>
+      <div class="gauge-item"><div class="gauge-num" style="color:#7d3c98" id="g-co2">—</div><div class="gauge-label">ตัน CO&#x2082; ลดได้</div></div>
+      <div class="gauge-item"><div class="gauge-num" style="color:var(--red)" id="g-save">—</div><div class="gauge-label">บาท ประหยัด</div></div>
+    </div>
+    <div class="gauge-row" style="margin-top:8px;grid-template-columns:repeat(3,1fr)">
+      <div class="gauge-item"><div class="gauge-num" style="color:#2471a3" id="g-spec-yield">—</div><div class="gauge-label">Specific Yield (kWh/kWp/ปี)</div><div style="font-size:10px;color:#888;margin-top:2px">ผลผลิตต่อขนาดระบบ เทียบประสิทธิภาพรายปี</div></div>
+      <div class="gauge-item"><div class="gauge-num" style="color:var(--green)" id="g-solar-cover">—</div><div class="gauge-label">Solar Coverage B1 (%)</div><div style="font-size:10px;color:#888;margin-top:2px">สัดส่วน Solar ต่อโหลดรวมอาคาร B1</div></div>
+      <div class="gauge-item"><div class="gauge-num" style="color:var(--orange)" id="g-ytd-pv">—</div><div class="gauge-label">kWh ผลิตปีนี้ (YTD)</div><div style="font-size:10px;color:#888;margin-top:2px">ยอดสะสมตั้งแต่ต้นปีปัจจุบัน</div></div>
     </div>
   </div>
-
   <div class="grid-2" style="margin-bottom:14px">
     <div class="card">
       <div class="card-title">PV Yield vs Import Grid รายเดือน (kWh)</div>
-      <div class="legend-row">
-        <div class="legend-item"><div class="legend-dot" style="background:#f39c12"></div> PV Yield (ผลิต)</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#2471a3"></div> Import Grid</div>
-      </div>
       <div class="chart-container tall"><canvas id="chartSolarMonthly"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-title">CO&#x2082; ที่ลดได้ — สะสมรายเดือน (ตัน)</div>
+      <div class="card-title">CO&#x2082; สะสมรายเดือน (ตัน)</div>
       <div class="chart-container tall"><canvas id="chartCO2"></canvas></div>
-      <div class="insight-box insight-green" style="margin-top:8px">
-        &#x1F331; Solar ลด CO&#x2082; รวม <strong>144.05 ตัน</strong> เทียบเท่าปลูกต้นไม้ ~<strong>16,000 ต้น</strong>
-      </div>
     </div>
   </div>
-
   <div class="card" style="margin-bottom:14px">
-    <div class="card-title">ผลการผลิต Solar รายปี — PV Yield vs Import Grid (kWh)</div>
+    <div class="card-title">ผลผลิต Solar รายปี (kWh)</div>
     <div class="chart-container"><canvas id="chartSolarAnnual"></canvas></div>
-    <div class="insight-box" style="margin-top:8px">
-      &#x1F4C8; <strong>การเติบโต:</strong> Solar ผลิตเพิ่มขึ้นจาก <strong>20,768 kWh</strong> (2565, 6 เดือน) เป็น <strong>117,604 kWh</strong> (2568, เต็มปี) — อาคาร B1 พึ่งพา Solar มากขึ้นทุกปี
-    </div>
   </div>
-
   <div class="card">
-    <div class="card-title">&#x1F9E0; วิเคราะห์ประสิทธิภาพ Solar — ข้อเสนอแนะ</div>
+    <div class="card-title">&#x1F9E0; วิเคราะห์ประสิทธิภาพ</div>
     <div class="rec-grid">
-      <div class="rec-card" style="background:#eafaf1;border:1px solid #a9dfbf">
-        <div style="font-weight:700;color:var(--green);margin-bottom:6px">&#x2705; จุดแข็ง</div>
-        <ul>
-          <li>Self-consumption Rate เกือบ 100% ไฟที่ผลิตถูกใช้ภายในทั้งหมด</li>
-          <li>ระบบมีเสถียรภาพ ผลิตต่อเนื่อง</li>
-          <li>CO&#x2082; Saving เพิ่มทุกปี</li>
-          <li>ไม่มี Export เสียออกนอก</li>
-        </ul>
-      </div>
-      <div class="rec-card" style="background:#fef9e7;border:1px solid #f0b27a">
-        <div style="font-weight:700;color:var(--orange);margin-bottom:6px">&#x26A0;&#xFE0F; จุดควรติดตาม</div>
-        <ul>
-          <li>บางเดือนข้อมูลขาดหาย (ม.ค.66 / มิ.ย.66) อาจมีการหยุดทำงาน</li>
-          <li>B1 ยังดึง Grid ราว 44% ของการใช้ไฟรวม</li>
-          <li>Performance Ratio (PR) ไม่มีข้อมูลบันทึก ควรเพิ่มการวัด</li>
-        </ul>
-      </div>
-      <div class="rec-card" style="background:#f4ecf7;border:1px solid #d2b4de">
-        <div style="font-weight:700;color:var(--purple);margin-bottom:6px">&#x1F4A1; ข้อเสนอแนะ</div>
-        <ul>
-          <li>พิจารณา <strong>Battery Storage</strong> เพื่อเก็บพลังงาน Solar ส่วนเกินช่วงกลางวัน</li>
-          <li>ขยาย Solar ครอบคลุมอาคารอื่นนอกจาก B1</li>
-          <li>ตั้ง <strong>Monitoring Alert</strong> เมื่อผลิตต่ำกว่าเป้า</li>
-          <li>บันทึก PR ทุกเดือนเพื่อตรวจสอบประสิทธิภาพแผง</li>
-        </ul>
-      </div>
+      <div class="rec-card" style="background:#eafaf1;border:1px solid #a9dfbf"><div style="font-weight:700;color:var(--green);margin-bottom:6px">&#x2705; จุดแข็ง</div><ul><li>Self-consumption ~100% — Solar ที่ผลิตได้ถูกใช้ภายใน B1 แทบทั้งหมด ไม่ Export กลับกริด</li><li>Solar ครอบคลุม ~<span id="rc-solar-cover">—</span>% ของโหลดอาคาร B1 ลด Grid Dependency อย่างมีนัยสำคัญ</li><li>CO&#x2082; ลดสะสมรวม <span id="rc-co2-total">—</span> ตัน นับตั้งแต่ติดตั้ง (มิ.ย. 2022)</li></ul></div>
+      <div class="rec-card" style="background:#fef9e7;border:1px solid #f0b27a"><div style="font-weight:700;color:var(--orange);margin-bottom:6px">&#x26A0;&#xFE0F; ควรติดตาม</div><ul><li>พบบางเดือนในปี 2023 ระบบหยุดทำงาน (PV Yield = 0) — ควรตรวจสอบ Log ระบบ Inverter</li><li>Specific Yield มีความแตกต่างระหว่างปี — ควรติดตามแนวโน้มเพื่อตรวจจับแผงเสื่อม</li><li>B1 ยังพึ่งพา Grid ประมาณ 40-45% ของโหลดรวม แม้ Solar ทำงานดีแล้ว</li></ul></div>
+      <div class="rec-card" style="background:#f4ecf7;border:1px solid #d2b4de"><div style="font-weight:700;color:var(--purple);margin-bottom:6px">&#x1F4A1; ข้อเสนอแนะ</div><ul><li>ติดตาม <strong>Specific Yield (kWh/kWp/ปี)</strong> เทียบปีต่อปี — ค่าลดลงแสดงถึงประสิทธิภาพแผงเริ่มเสื่อม</li><li>พิจารณา <strong>Battery Storage</strong> เพื่อเพิ่ม Solar Coverage จาก ~55% เป็น &gt;80% และลด Grid ในช่วงกลางคืน</li><li>ขยาย Solar ครอบคลุมอาคารอื่นในสำนักงาน เพื่อลด Main PEA โดยรวม</li></ul></div>
     </div>
   </div>
 </div>
 
-<!-- TAB 4: COST -->
+<!-- TAB: COST -->
 <div id="tab-cost" class="tab-panel">
   <div class="card" style="margin-bottom:14px">
-    <div class="card-title">ค่าไฟฟ้า Main PEA รายเดือน (บาท) — ก่อนและหลัง Solar</div>
+    <div class="card-title">ค่าไฟฟ้า Main PEA รายเดือน (บาท)</div>
     <div class="chart-container tall"><canvas id="chartCost"></canvas></div>
-    <div class="insight-box insight-orange" style="margin-top:8px">
-      &#x1F4B0; <strong>ยอดสูงสุดปี 2566:</strong> 1,595,456 บาท (เฉลี่ย 132,955 ฿/เดือน) จากอัตราค่าไฟสูงสุด 5.13 ฿/kVA — ปี 2567&ndash;2568 ค่าใช้จ่ายเริ่มลดลงสะท้อนผล Solar เต็มรูปแบบ
-    </div>
+    <div class="insight-box insight-orange" style="margin-top:8px" id="insightCost">กำลังโหลด...</div>
   </div>
-
   <div class="grid-2" style="margin-bottom:14px">
     <div class="card">
-      <div class="card-title">ค่าไฟฟ้ารายปี Main PEA (บาท)</div>
+      <div class="card-title">ค่าไฟรายปี (บาท)</div>
       <div class="chart-container"><canvas id="chartAnnualCost"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-title">ประมาณการมูลค่าประหยัดจาก Solar B1 รายปี</div>
+      <div class="card-title">ประมาณการมูลค่าประหยัดจาก Solar รายปี</div>
       <div class="chart-container"><canvas id="chartSavings"></canvas></div>
-      <div class="insight-box insight-green" style="margin-top:8px">
-        &#x1F3AF; มูลค่าประหยัดสะสม: <strong>1,433,186 บาท</strong> (303,184 kWh x 4.73 ฿/kWh)
-      </div>
     </div>
   </div>
-
   <div class="card">
     <div class="card-title">สรุปการเงินรายปี</div>
-    <div class="table-wrap">
-      <table class="data-table">
-        <thead><tr>
-          <th>ปี</th><th class="num">ค่าไฟ PEA (฿)</th><th class="num">ใช้ไฟ (kVA)</th>
-          <th class="num">อัตราเฉลี่ย (฿/kVA)</th><th class="num">PV Yield (kWh)</th>
-          <th class="num">ประหยัด (฿)</th><th>หมายเหตุ</th>
-        </tr></thead>
-        <tbody id="costTableBody"></tbody>
-      </table>
+    <div class="table-wrap"><table class="data-table"><thead><tr><th>ปี</th><th class="num">ค่าไฟ PEA (฿)</th><th class="num">ใช้ไฟ (kVA)</th><th class="num">อัตรา (฿/kVA)</th><th class="num">PV Yield (kWh)</th><th class="num">ประหยัด (฿)</th><th>หมายเหตุ</th></tr></thead><tbody id="costTableBody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- TAB: TABLE -->
+<div id="tab-table" class="tab-panel">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Main PEA รายเดือน (ล่าสุดก่อน)</div>
+      <div class="table-wrap"><table class="data-table"><thead><tr><th>เดือน</th><th class="num">ใช้ไฟ (kVA)</th><th class="num">ค่าไฟ (฿)</th><th class="num">อัตรา</th></tr></thead><tbody id="peaTableBody"></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Solar B1 รายเดือน (ล่าสุดก่อน)</div>
+      <div class="table-wrap"><table class="data-table"><thead><tr><th>เดือน</th><th class="num">PV Yield</th><th class="num">Import Grid</th><th class="num">Self-use</th><th class="num">B1 รวม</th><th class="num">CO&#x2082;</th></tr></thead><tbody id="solarTableBody"></tbody></table></div>
     </div>
   </div>
 </div>
 
-<!-- TAB 5: TABLE -->
-<div id="tab-table" class="tab-panel">
-  <div class="grid-2">
-    <div class="card">
-      <div class="card-title">ข้อมูลรายเดือน Main PEA (ล่าสุดก่อน)</div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead><tr><th>เดือน</th><th class="num">ใช้ไฟ (kVA)</th><th class="num">ค่าไฟ (฿)</th><th class="num">อัตรา (฿/kVA)</th></tr></thead>
-          <tbody id="peaTableBody"></tbody>
-        </table>
-      </div>
+<!-- TAB: IMPORT -->
+<div id="tab-import" class="tab-panel">
+  <div class="import-header">
+    <div class="ih-icon">&#x1F4E5;</div>
+    <div>
+      <h2>นำเข้า / อัปเดตข้อมูล</h2>
+      <p>ลาก & วางไฟล์ Excel ลงในกล่องด้านล่าง ระบบจะประมวลผลและอัปเดต Dashboard อัตโนมัติ<br>ข้อมูลจะถูกบันทึกในเบราว์เซอร์ — ไม่ต้องนำเข้าซ้ำทุกครั้งที่เปิด</p>
     </div>
-    <div class="card">
-      <div class="card-title">ข้อมูลรายเดือน Solar B1 (ล่าสุดก่อน)</div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead><tr>
-            <th>เดือน</th><th class="num">PV Yield (kWh)</th><th class="num">Import Grid</th>
-            <th class="num">Self-use</th><th class="num">B1 รวม</th><th class="num">CO&#x2082; (t)</th>
-          </tr></thead>
-          <tbody id="solarTableBody"></tbody>
-        </table>
-      </div>
+  </div>
+
+  <div class="import-tips">
+    <h4>&#x1F4CB; รูปแบบไฟล์ที่รองรับ</h4>
+    <ul>
+      <li><strong>Main PEA:</strong> ไฟล์ <code>ElectricThamuang_DB.xlsx</code> — Sheet ชื่อ <code>electric_data</code></li>
+      <li><strong>Solar B1:</strong> ไฟล์ <code>Plant Report_PTT 8_YYYY.xlsx</code> — Sheet ชื่อ <code>Sheet1</code> มีคอลัมน์ Statistical Period, PV Yield, Import, Self-consumption, Consumption, CO₂ Avoided</li>
+      <li>รองรับทั้ง <strong>.xlsx</strong> และ <strong>.xls</strong> | สามารถนำเข้าหลายไฟล์ Solar พร้อมกัน</li>
+    </ul>
+  </div>
+
+  <div class="drop-zones">
+    <!-- PEA Drop Zone -->
+    <div class="drop-zone" id="dz-pea"
+      ondragover="dzOver(event,'dz-pea')" ondragleave="dzLeave('dz-pea')" ondrop="dzDrop(event,'pea')">
+      <div class="dz-icon">&#x1F4CA;</div>
+      <div class="dz-title">Main PEA Database</div>
+      <div class="dz-sub">ไฟล์ <strong>ElectricThamuang_DB.xlsx</strong><br>หรือไฟล์ Excel ใหม่ที่มี Sheet <code>electric_data</code><br><br>ลากไฟล์มาวางที่นี่ หรือ</div>
+      <button class="dz-btn" onclick="document.getElementById('inp-pea').click()">&#x1F4C2; เลือกไฟล์</button>
+      <input class="dz-input" type="file" id="inp-pea" accept=".xlsx,.xls" onchange="fileSelected(this,'pea')">
+      <div class="dz-status" id="st-pea" style="display:none"></div>
     </div>
+    <!-- Solar Drop Zone -->
+    <div class="drop-zone" id="dz-solar"
+      ondragover="dzOver(event,'dz-solar')" ondragleave="dzLeave('dz-solar')" ondrop="dzDrop(event,'solar')">
+      <div class="dz-icon">&#x2600;&#xFE0F;</div>
+      <div class="dz-title">Solar B1 Plant Report</div>
+      <div class="dz-sub">ไฟล์ <strong>Plant Report_PTT 8_YYYY.xlsx</strong><br>รองรับหลายปีพร้อมกัน (2565, 2566, 2567...)<br><br>ลากไฟล์มาวางที่นี่ หรือ</div>
+      <button class="dz-btn dz-btn secondary" onclick="document.getElementById('inp-solar').click()">&#x1F4C2; เลือกไฟล์</button>
+      <input class="dz-input" type="file" id="inp-solar" accept=".xlsx,.xls" multiple onchange="fileSelected(this,'solar')">
+      <div class="dz-status" id="st-solar" style="display:none"></div>
+    </div>
+  </div>
+
+  <div class="card import-log-card">
+    <div class="card-title" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
+      <span>&#x1F4DC; ประวัติการนำเข้าข้อมูล</span>
+      <span style="font-size:10px;color:var(--text-muted)" id="log-count">0 รายการ</span>
+    </div>
+    <div class="log-list" id="importLogList">
+      <div class="log-empty">&#x1F4ED; ยังไม่มีประวัติการนำเข้า — เริ่มใช้ข้อมูล Baseline</div>
+    </div>
+  </div>
+
+  <div class="actions-bar">
+    <button class="dz-btn" onclick="exportCurrentData()">&#x1F4E4; Export ข้อมูลปัจจุบัน (JSON)</button>
+    <button class="dz-btn secondary" onclick="refreshDashboard()">&#x1F504; รีเฟรช Dashboard</button>
+    <button class="dz-btn danger" onclick="confirmReset()">&#x1F504; Reset เป็นข้อมูล Baseline</button>
   </div>
 </div>
 
 </div><!-- /content -->
 
 <div class="footer">
-  ข้อมูล: Main PEA (มิเตอร์หลัก การไฟฟ้า) &nbsp;|&nbsp; Solar B1 (ระบบ Solar Cell อาคาร B1, 134.07 kWp) &nbsp;|&nbsp; สำนักงาน ปท.8 ท่าม่วง<br>
-  ระบบวิเคราะห์ข้อมูลอัตโนมัติ &nbsp;|&nbsp; อัปเดต: พฤษภาคม 2569
+  สำนักงาน ปท.8 ท่าม่วง &nbsp;|&nbsp; Main PEA + Solar B1 Energy Dashboard &nbsp;|&nbsp; v2.2 (Analysis Refined)
 </div>
 
 <script>
-const PEA_DATA=[{"year":2016,"month":1,"period":"2016-01","consumption_kva":18704,"cost_baht":83674.5,"rate":4.4736},{"year":2016,"month":2,"period":"2016-02","consumption_kva":17888,"cost_baht":76780.63,"rate":4.2923},{"year":2016,"month":3,"period":"2016-03","consumption_kva":20184,"cost_baht":84144.27,"rate":4.1689},{"year":2016,"month":4,"period":"2016-04","consumption_kva":19352,"cost_baht":76250.78,"rate":3.9403},{"year":2016,"month":5,"period":"2016-05","consumption_kva":22960,"cost_baht":85975.42,"rate":3.7446},{"year":2016,"month":6,"period":"2016-06","consumption_kva":27360,"cost_baht":108470.39,"rate":3.9649},{"year":2016,"month":7,"period":"2016-07","consumption_kva":25928,"cost_baht":94574.63,"rate":3.6475},{"year":2016,"month":8,"period":"2016-08","consumption_kva":31872,"cost_baht":119365.32,"rate":3.7452},{"year":2016,"month":9,"period":"2016-09","consumption_kva":21952,"cost_baht":79076.66,"rate":3.6022},{"year":2016,"month":10,"period":"2016-10","consumption_kva":25912,"cost_baht":99328.77,"rate":3.8336},{"year":2016,"month":11,"period":"2016-11","consumption_kva":27856,"cost_baht":113127.57,"rate":4.0618},{"year":2016,"month":12,"period":"2016-12","consumption_kva":17952,"cost_baht":44669.22,"rate":2.488},{"year":2017,"month":1,"period":"2017-01","consumption_kva":21560,"cost_baht":86062.47,"rate":3.9919},{"year":2017,"month":2,"period":"2017-02","consumption_kva":17560,"cost_baht":62697.43,"rate":3.5706},{"year":2017,"month":3,"period":"2017-03","consumption_kva":23064,"cost_baht":91827.52,"rate":3.9816},{"year":2017,"month":4,"period":"2017-04","consumption_kva":46408,"cost_baht":185701.11,"rate":4.0015},{"year":2017,"month":5,"period":"2017-05","consumption_kva":28104,"cost_baht":110455.54,"rate":3.9299},{"year":2017,"month":6,"period":"2017-06","consumption_kva":26408,"cost_baht":103877.52,"rate":3.9335},{"year":2017,"month":7,"period":"2017-07","consumption_kva":28016,"cost_baht":110003.52,"rate":3.9263},{"year":2017,"month":8,"period":"2017-08","consumption_kva":30336,"cost_baht":119082.56,"rate":3.9254},{"year":2017,"month":9,"period":"2017-09","consumption_kva":27960,"cost_baht":109752.19,"rate":3.9253},{"year":2017,"month":10,"period":"2017-10","consumption_kva":27368,"cost_baht":107419.01,"rate":3.9249},{"year":2017,"month":11,"period":"2017-11","consumption_kva":26440,"cost_baht":103790.24,"rate":3.9254},{"year":2017,"month":12,"period":"2017-12","consumption_kva":38096,"cost_baht":153272.07,"rate":4.0234},{"year":2018,"month":1,"period":"2018-01","consumption_kva":23064,"cost_baht":91855.34,"rate":3.9827},{"year":2018,"month":2,"period":"2018-02","consumption_kva":22744,"cost_baht":88072.06,"rate":3.8724},{"year":2018,"month":3,"period":"2018-03","consumption_kva":22720,"cost_baht":88014.27,"rate":3.8737},{"year":2018,"month":4,"period":"2018-04","consumption_kva":27960,"cost_baht":108440.26,"rate":3.878},{"year":2018,"month":5,"period":"2018-05","consumption_kva":24688,"cost_baht":97303.85,"rate":3.9413},{"year":2018,"month":6,"period":"2018-06","consumption_kva":28296,"cost_baht":113091.84,"rate":3.9972},{"year":2018,"month":7,"period":"2018-07","consumption_kva":27800,"cost_baht":115378.51,"rate":4.1504},{"year":2018,"month":8,"period":"2018-08","consumption_kva":29248,"cost_baht":131527.47,"rate":4.4969},{"year":2018,"month":9,"period":"2018-09","consumption_kva":20440,"cost_baht":91974.94,"rate":4.4997},{"year":2018,"month":10,"period":"2018-10","consumption_kva":33464,"cost_baht":147440.04,"rate":4.4059},{"year":2018,"month":11,"period":"2018-11","consumption_kva":32032,"cost_baht":118740.62,"rate":3.7069},{"year":2018,"month":12,"period":"2018-12","consumption_kva":23176,"cost_baht":109623.0,"rate":4.7302},{"year":2019,"month":1,"period":"2019-01","consumption_kva":26840,"cost_baht":116293.39,"rate":4.3328},{"year":2019,"month":2,"period":"2019-02","consumption_kva":27008,"cost_baht":117027.87,"rate":4.3329},{"year":2019,"month":3,"period":"2019-03","consumption_kva":29880,"cost_baht":126960.62,"rate":4.2491},{"year":2019,"month":4,"period":"2019-04","consumption_kva":30456,"cost_baht":131987.35,"rate":4.334},{"year":2019,"month":5,"period":"2019-05","consumption_kva":27232,"cost_baht":116516.38,"rate":4.2783},{"year":2019,"month":6,"period":"2019-06","consumption_kva":26504,"cost_baht":114838.86,"rate":4.3328},{"year":2019,"month":7,"period":"2019-07","consumption_kva":26152,"cost_baht":113321.95,"rate":4.3331},{"year":2019,"month":8,"period":"2019-08","consumption_kva":27200,"cost_baht":117904.93,"rate":4.3348},{"year":2019,"month":9,"period":"2019-09","consumption_kva":28024,"cost_baht":121481.4,"rate":4.3351},{"year":2019,"month":10,"period":"2019-10","consumption_kva":27712,"cost_baht":121082.87,"rate":4.3695},{"year":2019,"month":11,"period":"2019-11","consumption_kva":26960,"cost_baht":110600.64,"rate":4.1025},{"year":2019,"month":12,"period":"2019-12","consumption_kva":24392,"cost_baht":112838.42,"rate":4.6259},{"year":2020,"month":1,"period":"2020-01","consumption_kva":24096,"cost_baht":101197.17,"rate":4.1998},{"year":2020,"month":2,"period":"2020-02","consumption_kva":22208,"cost_baht":93266.12,"rate":4.2001},{"year":2020,"month":3,"period":"2020-03","consumption_kva":32944,"cost_baht":138334.03,"rate":4.1987},{"year":2020,"month":4,"period":"2020-04","consumption_kva":25624,"cost_baht":107620.67,"rate":4.2002},{"year":2020,"month":5,"period":"2020-05","consumption_kva":28832,"cost_baht":121088.79,"rate":4.2},{"year":2020,"month":6,"period":"2020-06","consumption_kva":27424,"cost_baht":115183.66,"rate":4.1997},{"year":2020,"month":7,"period":"2020-07","consumption_kva":30528,"cost_baht":128221.66,"rate":4.1998},{"year":2020,"month":8,"period":"2020-08","consumption_kva":27920,"cost_baht":117265.21,"rate":4.2},{"year":2020,"month":9,"period":"2020-09","consumption_kva":28400,"cost_baht":119274.62,"rate":4.1998},{"year":2020,"month":10,"period":"2020-10","consumption_kva":29856,"cost_baht":120540.36,"rate":4.0378},{"year":2020,"month":11,"period":"2020-11","consumption_kva":22904,"cost_baht":94034.39,"rate":4.1055},{"year":2020,"month":12,"period":"2020-12","consumption_kva":19736,"cost_baht":49884.79,"rate":2.528},{"year":2021,"month":1,"period":"2021-01","consumption_kva":22440,"cost_baht":95847.23,"rate":4.2712},{"year":2021,"month":2,"period":"2021-02","consumption_kva":19712,"cost_baht":76172.63,"rate":3.8642},{"year":2021,"month":3,"period":"2021-03","consumption_kva":31320,"cost_baht":120910.37,"rate":3.8605},{"year":2021,"month":4,"period":"2021-04","consumption_kva":20688,"cost_baht":79938.04,"rate":3.8641},{"year":2021,"month":5,"period":"2021-05","consumption_kva":24312,"cost_baht":93929.38,"rate":3.8634},{"year":2021,"month":6,"period":"2021-06","consumption_kva":21944,"cost_baht":104266.91,"rate":4.7513},{"year":2021,"month":7,"period":"2021-07","consumption_kva":21832,"cost_baht":103734.72,"rate":4.7516},{"year":2021,"month":8,"period":"2021-08","consumption_kva":20504,"cost_baht":97406.61,"rate":4.7506},{"year":2021,"month":9,"period":"2021-09","consumption_kva":18504,"cost_baht":87903.29,"rate":4.7505},{"year":2021,"month":10,"period":"2021-10","consumption_kva":23576,"cost_baht":111999.18,"rate":4.7506},{"year":2021,"month":11,"period":"2021-11","consumption_kva":30032,"cost_baht":142664.18,"rate":4.7505},{"year":2021,"month":12,"period":"2021-12","consumption_kva":29312,"cost_baht":116528.02,"rate":3.9751},{"year":2022,"month":1,"period":"2022-01","consumption_kva":25032,"cost_baht":103534.11,"rate":4.1362},{"year":2022,"month":2,"period":"2022-02","consumption_kva":22288,"cost_baht":92186.79,"rate":4.1368},{"year":2022,"month":3,"period":"2022-03","consumption_kva":31144,"cost_baht":128857.73,"rate":4.1373},{"year":2022,"month":4,"period":"2022-04","consumption_kva":22024,"cost_baht":91120.38,"rate":4.1374},{"year":2022,"month":5,"period":"2022-05","consumption_kva":17768,"cost_baht":89427.8,"rate":5.0331},{"year":2022,"month":6,"period":"2022-06","consumption_kva":21208,"cost_baht":106699.45,"rate":5.0311},{"year":2022,"month":7,"period":"2022-07","consumption_kva":21264,"cost_baht":106981.7,"rate":5.0317},{"year":2022,"month":8,"period":"2022-08","consumption_kva":26064,"cost_baht":131144.94,"rate":5.0315},{"year":2022,"month":9,"period":"2022-09","consumption_kva":22024,"cost_baht":110804.73,"rate":5.0313},{"year":2022,"month":10,"period":"2022-10","consumption_kva":23792,"cost_baht":119726.36,"rate":5.0322},{"year":2022,"month":11,"period":"2022-11","consumption_kva":22584,"cost_baht":113638.36,"rate":5.0316},{"year":2022,"month":12,"period":"2022-12","consumption_kva":17976,"cost_baht":77290.18,"rate":4.3},{"year":2023,"month":1,"period":"2023-01","consumption_kva":17000,"cost_baht":70608.37,"rate":4.1534},{"year":2023,"month":2,"period":"2023-02","consumption_kva":20720,"cost_baht":86094.24,"rate":4.1548},{"year":2023,"month":3,"period":"2023-03","consumption_kva":29440,"cost_baht":179827.66,"rate":6.0808},{"year":2023,"month":4,"period":"2023-04","consumption_kva":24960,"cost_baht":152507.7,"rate":6.1099},{"year":2023,"month":5,"period":"2023-05","consumption_kva":36160,"cost_baht":220873.04,"rate":6.1082},{"year":2023,"month":6,"period":"2023-06","consumption_kva":23864,"cost_baht":145749.57,"rate":6.1079},{"year":2023,"month":7,"period":"2023-07","consumption_kva":23296,"cost_baht":142280.77,"rate":6.1082},{"year":2023,"month":8,"period":"2023-08","consumption_kva":28240,"cost_baht":172481.87,"rate":6.1083},{"year":2023,"month":9,"period":"2023-09","consumption_kva":26192,"cost_baht":159971.99,"rate":6.1082},{"year":2023,"month":10,"period":"2023-10","consumption_kva":27440,"cost_baht":129107.79,"rate":4.7053},{"year":2023,"month":11,"period":"2023-11","consumption_kva":27768,"cost_baht":130548.31,"rate":4.7015},{"year":2023,"month":12,"period":"2023-12","consumption_kva":27352,"cost_baht":106404.98,"rate":3.8896},{"year":2024,"month":1,"period":"2024-01","consumption_kva":21344,"cost_baht":94660.2,"rate":4.4348},{"year":2024,"month":2,"period":"2024-02","consumption_kva":23680,"cost_baht":111067.73,"rate":4.6904},{"year":2024,"month":3,"period":"2024-03","consumption_kva":31160,"cost_baht":148057.38,"rate":4.7515},{"year":2024,"month":4,"period":"2024-04","consumption_kva":25512,"cost_baht":121145.88,"rate":4.7485},{"year":2024,"month":5,"period":"2024-05","consumption_kva":26504,"cost_baht":125870.57,"rate":4.7491},{"year":2024,"month":6,"period":"2024-06","consumption_kva":24560,"cost_baht":116613.82,"rate":4.7481},{"year":2024,"month":7,"period":"2024-07","consumption_kva":24992,"cost_baht":118669.5,"rate":4.748},{"year":2024,"month":8,"period":"2024-08","consumption_kva":24288,"cost_baht":115333.64,"rate":4.7493},{"year":2024,"month":9,"period":"2024-09","consumption_kva":25360,"cost_baht":120426.9,"rate":4.7487},{"year":2024,"month":10,"period":"2024-10","consumption_kva":23888,"cost_baht":113401.41,"rate":4.7476},{"year":2024,"month":11,"period":"2024-11","consumption_kva":25200,"cost_baht":119640.8,"rate":4.7476},{"year":2024,"month":12,"period":"2024-12","consumption_kva":27536,"cost_baht":130710.14,"rate":4.7469},{"year":2025,"month":1,"period":"2025-01","consumption_kva":23472,"cost_baht":107399.66,"rate":4.5755},{"year":2025,"month":2,"period":"2025-02","consumption_kva":22848,"cost_baht":110686.34,"rate":4.8445},{"year":2025,"month":3,"period":"2025-03","consumption_kva":29216,"cost_baht":141512.55,"rate":4.8439},{"year":2025,"month":4,"period":"2025-04","consumption_kva":24296,"cost_baht":117650.12,"rate":4.844},{"year":2025,"month":5,"period":"2025-05","consumption_kva":22296,"cost_baht":108016.74,"rate":4.8444},{"year":2025,"month":6,"period":"2025-06","consumption_kva":25536,"cost_baht":123697.73,"rate":4.844},{"year":2025,"month":7,"period":"2025-07","consumption_kva":24536,"cost_baht":118887.18,"rate":4.8453},{"year":2025,"month":8,"period":"2025-08","consumption_kva":24536,"cost_baht":118906.54,"rate":4.8463},{"year":2025,"month":9,"period":"2025-09","consumption_kva":23176,"cost_baht":110684.47,"rate":4.7757},{"year":2025,"month":10,"period":"2025-10","consumption_kva":24048,"cost_baht":113077.36,"rate":4.7024},{"year":2025,"month":11,"period":"2025-11","consumption_kva":19760,"cost_baht":92801.7,"rate":4.697},{"year":2025,"month":12,"period":"2025-12","consumption_kva":20920,"cost_baht":92752.1,"rate":4.4332},{"year":2026,"month":1,"period":"2026-01","consumption_kva":19064,"cost_baht":82743.05,"rate":4.3402},{"year":2026,"month":2,"period":"2026-02","consumption_kva":24416,"cost_baht":107580.29,"rate":4.4061},{"year":2026,"month":3,"period":"2026-03","consumption_kva":24520,"cost_baht":106045.88,"rate":4.3249}];
+// ==================== BASELINE DATA ====================
+const BASELINE_PEA=[{"year":2016,"month":2,"period":"2016-02","consumption_kva":17888.0,"cost_baht":76780.63,"rate":4.2923},{"year":2016,"month":3,"period":"2016-03","consumption_kva":20184.0,"cost_baht":84144.27,"rate":4.1689},{"year":2016,"month":4,"period":"2016-04","consumption_kva":19352.0,"cost_baht":76250.78,"rate":3.9402},{"year":2016,"month":5,"period":"2016-05","consumption_kva":22960.0,"cost_baht":85975.42,"rate":3.7446},{"year":2016,"month":6,"period":"2016-06","consumption_kva":27360.0,"cost_baht":108470.39,"rate":3.9646},{"year":2016,"month":7,"period":"2016-07","consumption_kva":25928.0,"cost_baht":94574.63,"rate":3.6476},{"year":2016,"month":8,"period":"2016-08","consumption_kva":31872.0,"cost_baht":119365.32,"rate":3.7451},{"year":2016,"month":9,"period":"2016-09","consumption_kva":21952.0,"cost_baht":79076.66,"rate":3.6023},{"year":2016,"month":10,"period":"2016-10","consumption_kva":25912.0,"cost_baht":99328.77,"rate":3.8333},{"year":2016,"month":11,"period":"2016-11","consumption_kva":23440.0,"cost_baht":89945.53,"rate":3.8373},{"year":2016,"month":12,"period":"2016-12","consumption_kva":22368.0,"cost_baht":87857.26,"rate":3.9278},{"year":2017,"month":1,"period":"2017-01","consumption_kva":22632.0,"cost_baht":84737.16,"rate":3.7441},{"year":2017,"month":2,"period":"2017-02","consumption_kva":23160.0,"cost_baht":89050.05,"rate":3.845},{"year":2017,"month":3,"period":"2017-03","consumption_kva":28568.0,"cost_baht":112382.06,"rate":3.9338},{"year":2017,"month":4,"period":"2017-04","consumption_kva":46408.0,"cost_baht":165498.36,"rate":3.5662},{"year":2017,"month":5,"period":"2017-05","consumption_kva":26936.0,"cost_baht":107343.44,"rate":3.9851},{"year":2017,"month":6,"period":"2017-06","consumption_kva":26240.0,"cost_baht":102608.71,"rate":3.9104},{"year":2017,"month":7,"period":"2017-07","consumption_kva":28360.0,"cost_baht":113385.82,"rate":3.9981},{"year":2017,"month":8,"period":"2017-08","consumption_kva":28808.0,"cost_baht":113323.63,"rate":3.9338},{"year":2017,"month":9,"period":"2017-09","consumption_kva":26664.0,"cost_baht":104791.57,"rate":3.9301},{"year":2017,"month":10,"period":"2017-10","consumption_kva":23632.0,"cost_baht":93460.33,"rate":3.9548},{"year":2017,"month":11,"period":"2017-11","consumption_kva":22352.0,"cost_baht":89646.25,"rate":4.0107},{"year":2017,"month":12,"period":"2017-12","consumption_kva":17560.0,"cost_baht":67717.8,"rate":3.8564},{"year":2018,"month":1,"period":"2018-01","consumption_kva":20440.0,"cost_baht":84278.53,"rate":4.1232},{"year":2018,"month":2,"period":"2018-02","consumption_kva":24304.0,"cost_baht":95288.33,"rate":3.9207},{"year":2018,"month":3,"period":"2018-03","consumption_kva":29808.0,"cost_baht":123493.72,"rate":4.143},{"year":2018,"month":4,"period":"2018-04","consumption_kva":26640.0,"cost_baht":114649.28,"rate":4.3037},{"year":2018,"month":5,"period":"2018-05","consumption_kva":27376.0,"cost_baht":107556.13,"rate":3.9288},{"year":2018,"month":6,"period":"2018-06","consumption_kva":25912.0,"cost_baht":105920.61,"rate":4.0877},{"year":2018,"month":7,"period":"2018-07","consumption_kva":23768.0,"cost_baht":106997.67,"rate":4.5018},{"year":2018,"month":8,"period":"2018-08","consumption_kva":31056.0,"cost_baht":128397.52,"rate":4.1344},{"year":2018,"month":9,"period":"2018-09","consumption_kva":33464.0,"cost_baht":141196.27,"rate":4.2193},{"year":2018,"month":10,"period":"2018-10","consumption_kva":23648.0,"cost_baht":97189.05,"rate":4.1098},{"year":2018,"month":11,"period":"2018-11","consumption_kva":24472.0,"cost_baht":100638.78,"rate":4.1124},{"year":2018,"month":12,"period":"2018-12","consumption_kva":24744.0,"cost_baht":95856.02,"rate":3.8739},{"year":2019,"month":1,"period":"2019-01","consumption_kva":26032.0,"cost_baht":110140.05,"rate":4.2309},{"year":2019,"month":2,"period":"2019-02","consumption_kva":26328.0,"cost_baht":105606.97,"rate":4.0112},{"year":2019,"month":3,"period":"2019-03","consumption_kva":29488.0,"cost_baht":114479.0,"rate":3.8822},{"year":2019,"month":4,"period":"2019-04","consumption_kva":30456.0,"cost_baht":129389.27,"rate":4.2484},{"year":2019,"month":5,"period":"2019-05","consumption_kva":29440.0,"cost_baht":127476.62,"rate":4.33},{"year":2019,"month":6,"period":"2019-06","consumption_kva":25792.0,"cost_baht":106662.18,"rate":4.1355},{"year":2019,"month":7,"period":"2019-07","consumption_kva":25584.0,"cost_baht":101579.21,"rate":3.9704},{"year":2019,"month":8,"period":"2019-08","consumption_kva":25440.0,"cost_baht":101346.34,"rate":3.9837},{"year":2019,"month":9,"period":"2019-09","consumption_kva":26408.0,"cost_baht":107505.26,"rate":4.0709},{"year":2019,"month":10,"period":"2019-10","consumption_kva":29320.0,"cost_baht":119430.76,"rate":4.0734},{"year":2019,"month":11,"period":"2019-11","consumption_kva":24872.0,"cost_baht":100315.8,"rate":4.0333},{"year":2019,"month":12,"period":"2019-12","consumption_kva":24392.0,"cost_baht":96923.22,"rate":3.9736},{"year":2020,"month":1,"period":"2020-01","consumption_kva":30608.0,"cost_baht":125131.66,"rate":4.0882},{"year":2020,"month":2,"period":"2020-02","consumption_kva":27864.0,"cost_baht":110972.63,"rate":3.9827},{"year":2020,"month":3,"period":"2020-03","consumption_kva":32944.0,"cost_baht":132021.2,"rate":4.0074},{"year":2020,"month":4,"period":"2020-04","consumption_kva":32048.0,"cost_baht":125633.26,"rate":3.9202},{"year":2020,"month":5,"period":"2020-05","consumption_kva":32200.0,"cost_baht":121639.16,"rate":3.7776},{"year":2020,"month":6,"period":"2020-06","consumption_kva":29384.0,"cost_baht":114802.07,"rate":3.907},{"year":2020,"month":7,"period":"2020-07","consumption_kva":28312.0,"cost_baht":111893.61,"rate":3.9522},{"year":2020,"month":8,"period":"2020-08","consumption_kva":27400.0,"cost_baht":108477.19,"rate":3.959},{"year":2020,"month":9,"period":"2020-09","consumption_kva":28448.0,"cost_baht":112655.11,"rate":3.96},{"year":2020,"month":10,"period":"2020-10","consumption_kva":19736.0,"cost_baht":78225.17,"rate":3.9636},{"year":2020,"month":11,"period":"2020-11","consumption_kva":20040.0,"cost_baht":80617.62,"rate":4.0228},{"year":2020,"month":12,"period":"2020-12","consumption_kva":20104.0,"cost_baht":83842.79,"rate":4.1705},{"year":2021,"month":1,"period":"2021-01","consumption_kva":19024.0,"cost_baht":79160.79,"rate":4.1611},{"year":2021,"month":2,"period":"2021-02","consumption_kva":21184.0,"cost_baht":85892.99,"rate":4.0546},{"year":2021,"month":3,"period":"2021-03","consumption_kva":31320.0,"cost_baht":136078.27,"rate":4.3448},{"year":2021,"month":4,"period":"2021-04","consumption_kva":25280.0,"cost_baht":104720.15,"rate":4.1424},{"year":2021,"month":5,"period":"2021-05","consumption_kva":21168.0,"cost_baht":81722.87,"rate":3.8607},{"year":2021,"month":6,"period":"2021-06","consumption_kva":22624.0,"cost_baht":98836.08,"rate":4.3686},{"year":2021,"month":7,"period":"2021-07","consumption_kva":22016.0,"cost_baht":93989.01,"rate":4.2691},{"year":2021,"month":8,"period":"2021-08","consumption_kva":20008.0,"cost_baht":85535.64,"rate":4.2751},{"year":2021,"month":9,"period":"2021-09","consumption_kva":19904.0,"cost_baht":90966.72,"rate":4.5703},{"year":2021,"month":10,"period":"2021-10","consumption_kva":18504.0,"cost_baht":87961.14,"rate":4.7536},{"year":2021,"month":11,"period":"2021-11","consumption_kva":23160.0,"cost_baht":102519.54,"rate":4.4266},{"year":2021,"month":12,"period":"2021-12","consumption_kva":19984.0,"cost_baht":83717.36,"rate":4.1892},{"year":2022,"month":1,"period":"2022-01","consumption_kva":26008.0,"cost_baht":116180.92,"rate":4.4671},{"year":2022,"month":2,"period":"2022-02","consumption_kva":24944.0,"cost_baht":113826.25,"rate":4.5633},{"year":2022,"month":3,"period":"2022-03","consumption_kva":31144.0,"cost_baht":134080.39,"rate":4.3052},{"year":2022,"month":4,"period":"2022-04","consumption_kva":28168.0,"cost_baht":116595.52,"rate":4.1393},{"year":2022,"month":5,"period":"2022-05","consumption_kva":24704.0,"cost_baht":119170.29,"rate":4.8239},{"year":2022,"month":6,"period":"2022-06","consumption_kva":24392.0,"cost_baht":114125.22,"rate":4.6788},{"year":2022,"month":7,"period":"2022-07","consumption_kva":18992.0,"cost_baht":79700.63,"rate":4.1965},{"year":2022,"month":8,"period":"2022-08","consumption_kva":18408.0,"cost_baht":79635.69,"rate":4.3261},{"year":2022,"month":9,"period":"2022-09","consumption_kva":19792.0,"cost_baht":100562.95,"rate":5.081},{"year":2022,"month":10,"period":"2022-10","consumption_kva":19928.0,"cost_baht":104021.32,"rate":5.2199},{"year":2022,"month":11,"period":"2022-11","consumption_kva":18920.0,"cost_baht":100856.92,"rate":5.3307},{"year":2022,"month":12,"period":"2022-12","consumption_kva":17768.0,"cost_baht":92655.43,"rate":5.2147},{"year":2023,"month":1,"period":"2023-01","consumption_kva":17000.0,"cost_baht":103381.89,"rate":6.0813},{"year":2023,"month":2,"period":"2023-02","consumption_kva":19816.0,"cost_baht":119577.5,"rate":6.0344},{"year":2023,"month":3,"period":"2023-03","consumption_kva":24312.0,"cost_baht":144924.51,"rate":5.961},{"year":2023,"month":4,"period":"2023-04","consumption_kva":26544.0,"cost_baht":153706.41,"rate":5.7906},{"year":2023,"month":5,"period":"2023-05","consumption_kva":36160.0,"cost_baht":185612.71,"rate":5.1331},{"year":2023,"month":6,"period":"2023-06","consumption_kva":32592.0,"cost_baht":170548.71,"rate":5.2328},{"year":2023,"month":7,"period":"2023-07","consumption_kva":30464.0,"cost_baht":152625.48,"rate":5.01},{"year":2023,"month":8,"period":"2023-08","consumption_kva":30408.0,"cost_baht":154443.09,"rate":5.079},{"year":2023,"month":9,"period":"2023-09","consumption_kva":25168.0,"cost_baht":109817.64,"rate":4.3634},{"year":2023,"month":10,"period":"2023-10","consumption_kva":25848.0,"cost_baht":107519.7,"rate":4.1597},{"year":2023,"month":11,"period":"2023-11","consumption_kva":22832.0,"cost_baht":101951.12,"rate":4.4653},{"year":2023,"month":12,"period":"2023-12","consumption_kva":21288.0,"cost_baht":91347.53,"rate":4.291},{"year":2024,"month":1,"period":"2024-01","consumption_kva":25464.0,"cost_baht":117438.11,"rate":4.6119},{"year":2024,"month":2,"period":"2024-02","consumption_kva":25256.0,"cost_baht":115986.41,"rate":4.5924},{"year":2024,"month":3,"period":"2024-03","consumption_kva":31160.0,"cost_baht":138607.24,"rate":4.4482},{"year":2024,"month":4,"period":"2024-04","consumption_kva":28408.0,"cost_baht":134570.65,"rate":4.7371},{"year":2024,"month":5,"period":"2024-05","consumption_kva":28808.0,"cost_baht":127657.53,"rate":4.4313},{"year":2024,"month":6,"period":"2024-06","consumption_kva":22616.0,"cost_baht":105699.39,"rate":4.6737},{"year":2024,"month":7,"period":"2024-07","consumption_kva":23824.0,"cost_baht":106444.63,"rate":4.468},{"year":2024,"month":8,"period":"2024-08","consumption_kva":24792.0,"cost_baht":112500.19,"rate":4.5378},{"year":2024,"month":9,"period":"2024-09","consumption_kva":24288.0,"cost_baht":113185.38,"rate":4.6601},{"year":2024,"month":10,"period":"2024-10","consumption_kva":23352.0,"cost_baht":104885.26,"rate":4.4915},{"year":2024,"month":11,"period":"2024-11","consumption_kva":23712.0,"cost_baht":108598.67,"rate":4.5799},{"year":2024,"month":12,"period":"2024-12","consumption_kva":21344.0,"cost_baht":100024.51,"rate":4.6863},{"year":2025,"month":1,"period":"2025-01","consumption_kva":20464.0,"cost_baht":93763.24,"rate":4.5819},{"year":2025,"month":2,"period":"2025-02","consumption_kva":23096.0,"cost_baht":106714.04,"rate":4.6205},{"year":2025,"month":3,"period":"2025-03","consumption_kva":29216.0,"cost_baht":136132.38,"rate":4.6595},{"year":2025,"month":4,"period":"2025-04","consumption_kva":25464.0,"cost_baht":123586.47,"rate":4.8534},{"year":2025,"month":5,"period":"2025-05","consumption_kva":23384.0,"cost_baht":109945.35,"rate":4.7017},{"year":2025,"month":6,"period":"2025-06","consumption_kva":25088.0,"cost_baht":118161.0,"rate":4.7099},{"year":2025,"month":7,"period":"2025-07","consumption_kva":23384.0,"cost_baht":106147.5,"rate":4.5393},{"year":2025,"month":8,"period":"2025-08","consumption_kva":25264.0,"cost_baht":112727.83,"rate":4.462},{"year":2025,"month":9,"period":"2025-09","consumption_kva":26856.0,"cost_baht":121558.91,"rate":4.5263},{"year":2025,"month":10,"period":"2025-10","consumption_kva":25016.0,"cost_baht":109082.97,"rate":4.3605},{"year":2025,"month":11,"period":"2025-11","consumption_kva":19760.0,"cost_baht":92801.7,"rate":4.6964},{"year":2025,"month":12,"period":"2025-12","consumption_kva":20920.0,"cost_baht":92752.1,"rate":4.4337},{"year":2026,"month":1,"period":"2026-01","consumption_kva":19064.0,"cost_baht":82743.05,"rate":4.3403},{"year":2026,"month":2,"period":"2026-02","consumption_kva":24416.0,"cost_baht":107580.29,"rate":4.4061},{"year":2026,"month":3,"period":"2026-03","consumption_kva":24520.0,"cost_baht":106045.88,"rate":4.3249},{"year":2026,"month":4,"period":"2026-04","consumption_kva":25400.0,"cost_baht":105263.08,"rate":4.1442},{"year":2026,"month":5,"period":"2026-05","consumption_kva":25640.0,"cost_baht":110888.06,"rate":4.3248}];
 
-const SOLAR_DATA=[{"period":"2022-06","pv_yield":5004.96,"import_kwh":2876.85,"self_consumption":4988.82,"consumption_kwh":7865.67,"co2_avoided":2.377},{"period":"2022-07","pv_yield":5390.47,"import_kwh":2260.48,"self_consumption":5389.29,"consumption_kwh":6582.1,"co2_avoided":2.56},{"period":"2022-08","pv_yield":6188.79,"import_kwh":2179.51,"self_consumption":6187.94,"consumption_kwh":6070.11,"co2_avoided":2.94},{"period":"2022-09","pv_yield":2208.19,"import_kwh":1600.94,"self_consumption":2207.31,"consumption_kwh":3808.25,"co2_avoided":1.049},{"period":"2022-11","pv_yield":922.98,"import_kwh":947.1,"self_consumption":922.43,"consumption_kwh":1869.53,"co2_avoided":0.438},{"period":"2022-12","pv_yield":1052.58,"import_kwh":921.72,"self_consumption":1051.89,"consumption_kwh":1973.61,"co2_avoided":0.5},{"period":"2023-02","pv_yield":747.33,"import_kwh":584.92,"self_consumption":747.15,"consumption_kwh":1332.07,"co2_avoided":0.355},{"period":"2023-03","pv_yield":5409.17,"import_kwh":3999.49,"self_consumption":5407.35,"consumption_kwh":9406.84,"co2_avoided":2.569},{"period":"2023-04","pv_yield":5774.46,"import_kwh":7737.39,"self_consumption":5773.21,"consumption_kwh":13510.6,"co2_avoided":2.743},{"period":"2023-08","pv_yield":2650.45,"import_kwh":11178.08,"self_consumption":2649.8,"consumption_kwh":13827.88,"co2_avoided":1.259},{"period":"2023-09","pv_yield":6343.15,"import_kwh":4927.42,"self_consumption":6341.33,"consumption_kwh":11268.75,"co2_avoided":3.013},{"period":"2023-10","pv_yield":5739.66,"import_kwh":4977.2,"self_consumption":5737.68,"consumption_kwh":10714.88,"co2_avoided":2.726},{"period":"2023-11","pv_yield":5389.31,"import_kwh":4619.76,"self_consumption":5387.08,"consumption_kwh":10006.84,"co2_avoided":2.56},{"period":"2023-12","pv_yield":4474.63,"import_kwh":4152.48,"self_consumption":4472.85,"consumption_kwh":8625.33,"co2_avoided":2.125},{"period":"2024-01","pv_yield":6171.64,"import_kwh":6212.96,"self_consumption":6170.04,"consumption_kwh":12383,"co2_avoided":2.931},{"period":"2024-02","pv_yield":6783.81,"import_kwh":5450.8,"self_consumption":6782.41,"consumption_kwh":12233.21,"co2_avoided":3.222},{"period":"2024-03","pv_yield":7548.93,"import_kwh":6161.48,"self_consumption":7547.57,"consumption_kwh":13709.05,"co2_avoided":3.586},{"period":"2024-04","pv_yield":9804.98,"import_kwh":6444.18,"self_consumption":9803.83,"consumption_kwh":16248.01,"co2_avoided":4.657},{"period":"2024-05","pv_yield":8682.56,"import_kwh":6552.72,"self_consumption":8681.3,"consumption_kwh":15234.02,"co2_avoided":4.124},{"period":"2024-06","pv_yield":7767.5,"import_kwh":5839.44,"self_consumption":7766.2,"consumption_kwh":13605.64,"co2_avoided":3.689},{"period":"2024-07","pv_yield":6652.66,"import_kwh":4671.1,"self_consumption":6651.27,"consumption_kwh":11322.37,"co2_avoided":3.16},{"period":"2024-08","pv_yield":7042.36,"import_kwh":4133.04,"self_consumption":7040.43,"consumption_kwh":11173.47,"co2_avoided":3.345},{"period":"2024-09","pv_yield":7662.8,"import_kwh":5638.37,"self_consumption":7661.33,"consumption_kwh":13299.7,"co2_avoided":3.64},{"period":"2024-10","pv_yield":6033.61,"import_kwh":4507.09,"self_consumption":6032.13,"consumption_kwh":10539.22,"co2_avoided":2.866},{"period":"2024-11","pv_yield":6582.52,"import_kwh":5030.48,"self_consumption":6580.96,"consumption_kwh":11611.44,"co2_avoided":3.127},{"period":"2024-12","pv_yield":5241.01,"import_kwh":4548,"self_consumption":5239.56,"consumption_kwh":9787.56,"co2_avoided":2.489},{"period":"2025-01","pv_yield":6400.48,"import_kwh":4209.07,"self_consumption":6397.54,"consumption_kwh":10606.61,"co2_avoided":3.04},{"period":"2025-02","pv_yield":8120.36,"import_kwh":5850.56,"self_consumption":8118.74,"consumption_kwh":13969.3,"co2_avoided":3.857},{"period":"2025-03","pv_yield":11003.23,"import_kwh":7704.99,"self_consumption":11001.48,"consumption_kwh":18706.47,"co2_avoided":5.227},{"period":"2025-04","pv_yield":10362.98,"import_kwh":6656.26,"self_consumption":10361.74,"consumption_kwh":17018,"co2_avoided":4.922},{"period":"2025-05","pv_yield":9515.62,"import_kwh":7172.53,"self_consumption":9514.31,"consumption_kwh":16686.84,"co2_avoided":4.52},{"period":"2025-06","pv_yield":8927.16,"import_kwh":10156.32,"self_consumption":8925.82,"consumption_kwh":19082.14,"co2_avoided":4.24},{"period":"2025-07","pv_yield":11090.09,"import_kwh":7834.03,"self_consumption":11088.38,"consumption_kwh":18922.41,"co2_avoided":5.268},{"period":"2025-08","pv_yield":13981.22,"import_kwh":8594.91,"self_consumption":13979.28,"consumption_kwh":22574.19,"co2_avoided":6.641},{"period":"2025-09","pv_yield":11843,"import_kwh":8626.27,"self_consumption":11840.82,"consumption_kwh":20467.09,"co2_avoided":5.625},{"period":"2025-10","pv_yield":11728.24,"import_kwh":8976.52,"self_consumption":11726.39,"consumption_kwh":20702.91,"co2_avoided":5.57},{"period":"2025-11","pv_yield":6732.78,"import_kwh":5251.9,"self_consumption":6730.6,"consumption_kwh":11982.5,"co2_avoided":3.198},{"period":"2025-12","pv_yield":7898.91,"import_kwh":4129.63,"self_consumption":7895.47,"consumption_kwh":12025.1,"co2_avoided":3.751},{"period":"2026-01","pv_yield":7243.95,"import_kwh":3288.5,"self_consumption":7240.42,"consumption_kwh":10528.92,"co2_avoided":3.441},{"period":"2026-02","pv_yield":10878.93,"import_kwh":6574.65,"self_consumption":10876.39,"consumption_kwh":17451.04,"co2_avoided":5.167},{"period":"2026-03","pv_yield":10390.98,"import_kwh":4684.13,"self_consumption":10388.34,"consumption_kwh":15072.47,"co2_avoided":4.937},{"period":"2026-04","pv_yield":8112.81,"import_kwh":4082.53,"self_consumption":8110.88,"consumption_kwh":12193.41,"co2_avoided":3.854},{"period":"2026-05","pv_yield":5752.3,"import_kwh":3200.19,"self_consumption":5750.86,"consumption_kwh":8951.05,"co2_avoided":2.732}];
+const BASELINE_SOLAR=[{"period":"2022-06","pv_yield":5004.96,"import_kwh":2876.85,"self_consumption":4988.82,"consumption_kwh":7865.67,"co2_avoided":2.377},{"period":"2022-07","pv_yield":5390.47,"import_kwh":2260.48,"self_consumption":5389.29,"consumption_kwh":6582.1,"co2_avoided":2.56},{"period":"2022-08","pv_yield":6188.79,"import_kwh":2179.51,"self_consumption":6187.94,"consumption_kwh":6070.11,"co2_avoided":2.94},{"period":"2022-09","pv_yield":2208.19,"import_kwh":1600.94,"self_consumption":2207.31,"consumption_kwh":3808.25,"co2_avoided":1.049},{"period":"2022-10","pv_yield":0.0,"import_kwh":16.36,"self_consumption":0.0,"consumption_kwh":16.36,"co2_avoided":0.0},{"period":"2022-11","pv_yield":922.98,"import_kwh":947.1,"self_consumption":922.43,"consumption_kwh":1869.53,"co2_avoided":0.438},{"period":"2022-12","pv_yield":1052.58,"import_kwh":921.72,"self_consumption":1051.89,"consumption_kwh":1973.61,"co2_avoided":0.5},{"period":"2023-02","pv_yield":747.33,"import_kwh":584.92,"self_consumption":747.15,"consumption_kwh":1332.07,"co2_avoided":0.355},{"period":"2023-03","pv_yield":5409.17,"import_kwh":3999.49,"self_consumption":5407.35,"consumption_kwh":9406.84,"co2_avoided":2.569},{"period":"2023-04","pv_yield":5774.46,"import_kwh":7737.39,"self_consumption":5773.21,"consumption_kwh":13510.6,"co2_avoided":2.743},{"period":"2023-05","pv_yield":0.0,"import_kwh":17545.19,"self_consumption":0.0,"consumption_kwh":17545.19,"co2_avoided":0.0},{"period":"2023-06","pv_yield":15.62,"import_kwh":14409.04,"self_consumption":15.62,"consumption_kwh":14424.66,"co2_avoided":0.007},{"period":"2023-07","pv_yield":0.0,"import_kwh":13066.52,"self_consumption":0.0,"consumption_kwh":13066.52,"co2_avoided":0.0},{"period":"2023-08","pv_yield":2650.45,"import_kwh":11178.08,"self_consumption":2649.8,"consumption_kwh":13827.88,"co2_avoided":1.259},{"period":"2023-09","pv_yield":6343.15,"import_kwh":4927.42,"self_consumption":6341.33,"consumption_kwh":11268.75,"co2_avoided":3.013},{"period":"2023-10","pv_yield":5739.66,"import_kwh":4977.2,"self_consumption":5737.68,"consumption_kwh":10714.88,"co2_avoided":2.726},{"period":"2023-11","pv_yield":5389.31,"import_kwh":4619.76,"self_consumption":5387.08,"consumption_kwh":10006.84,"co2_avoided":2.56},{"period":"2023-12","pv_yield":4474.63,"import_kwh":4152.48,"self_consumption":4472.85,"consumption_kwh":8625.33,"co2_avoided":2.125},{"period":"2024-01","pv_yield":6171.64,"import_kwh":6212.96,"self_consumption":6170.04,"consumption_kwh":12383.0,"co2_avoided":2.932},{"period":"2024-02","pv_yield":6783.81,"import_kwh":5450.8,"self_consumption":6782.41,"consumption_kwh":12233.21,"co2_avoided":3.222},{"period":"2024-03","pv_yield":7548.93,"import_kwh":6161.48,"self_consumption":7547.57,"consumption_kwh":13709.05,"co2_avoided":3.586},{"period":"2024-04","pv_yield":9804.98,"import_kwh":6444.18,"self_consumption":9803.83,"consumption_kwh":16248.01,"co2_avoided":4.657},{"period":"2024-05","pv_yield":8682.56,"import_kwh":6552.72,"self_consumption":8681.3,"consumption_kwh":15234.02,"co2_avoided":4.124},{"period":"2024-06","pv_yield":7767.5,"import_kwh":5839.44,"self_consumption":7766.2,"consumption_kwh":13605.64,"co2_avoided":3.69},{"period":"2024-07","pv_yield":6652.66,"import_kwh":4671.1,"self_consumption":6651.27,"consumption_kwh":11322.37,"co2_avoided":3.16},{"period":"2024-08","pv_yield":7042.36,"import_kwh":4133.04,"self_consumption":7040.43,"consumption_kwh":11173.47,"co2_avoided":3.345},{"period":"2024-09","pv_yield":7662.8,"import_kwh":5638.37,"self_consumption":7661.33,"consumption_kwh":13299.7,"co2_avoided":3.64},{"period":"2024-10","pv_yield":6033.61,"import_kwh":4507.09,"self_consumption":6032.13,"consumption_kwh":10539.22,"co2_avoided":2.866},{"period":"2024-11","pv_yield":6582.52,"import_kwh":5030.48,"self_consumption":6580.96,"consumption_kwh":11611.44,"co2_avoided":3.127},{"period":"2024-12","pv_yield":5241.01,"import_kwh":4548.0,"self_consumption":5239.56,"consumption_kwh":9787.56,"co2_avoided":2.489},{"period":"2025-01","pv_yield":6400.48,"import_kwh":4209.07,"self_consumption":6397.54,"consumption_kwh":10606.61,"co2_avoided":3.04},{"period":"2025-02","pv_yield":8120.36,"import_kwh":5850.56,"self_consumption":8118.74,"consumption_kwh":13969.3,"co2_avoided":3.857},{"period":"2025-03","pv_yield":11003.23,"import_kwh":7704.99,"self_consumption":11001.48,"consumption_kwh":18706.47,"co2_avoided":5.227},{"period":"2025-04","pv_yield":10362.98,"import_kwh":6656.26,"self_consumption":10361.74,"consumption_kwh":17018.0,"co2_avoided":4.922},{"period":"2025-05","pv_yield":9515.62,"import_kwh":7172.53,"self_consumption":9514.31,"consumption_kwh":16686.84,"co2_avoided":4.52},{"period":"2025-06","pv_yield":8927.16,"import_kwh":10156.32,"self_consumption":8925.82,"consumption_kwh":19082.14,"co2_avoided":4.24},{"period":"2025-07","pv_yield":11090.09,"import_kwh":7834.03,"self_consumption":11088.38,"consumption_kwh":18922.41,"co2_avoided":5.268},{"period":"2025-08","pv_yield":13981.22,"import_kwh":8594.91,"self_consumption":13979.28,"consumption_kwh":22574.19,"co2_avoided":6.641},{"period":"2025-09","pv_yield":11843.0,"import_kwh":8626.27,"self_consumption":11840.82,"consumption_kwh":20467.09,"co2_avoided":5.625},{"period":"2025-10","pv_yield":11728.24,"import_kwh":8976.52,"self_consumption":11726.39,"consumption_kwh":20702.91,"co2_avoided":5.571},{"period":"2025-11","pv_yield":6732.78,"import_kwh":5251.9,"self_consumption":6730.6,"consumption_kwh":11982.5,"co2_avoided":3.198},{"period":"2025-12","pv_yield":7898.91,"import_kwh":4129.63,"self_consumption":7895.47,"consumption_kwh":12025.1,"co2_avoided":3.752},{"period":"2026-01","pv_yield":7243.95,"import_kwh":3288.5,"self_consumption":7240.42,"consumption_kwh":10528.92,"co2_avoided":3.441},{"period":"2026-02","pv_yield":10878.93,"import_kwh":6574.65,"self_consumption":10876.39,"consumption_kwh":17451.04,"co2_avoided":5.167},{"period":"2026-03","pv_yield":10390.98,"import_kwh":4684.13,"self_consumption":10388.34,"consumption_kwh":15072.47,"co2_avoided":4.936},{"period":"2026-04","pv_yield":8112.81,"import_kwh":4082.53,"self_consumption":8110.88,"consumption_kwh":12193.41,"co2_avoided":3.854},{"period":"2026-05","pv_yield":6727.73,"import_kwh":3807.77,"self_consumption":6726.07,"consumption_kwh":10533.84,"co2_avoided":3.196},{"period":"2026-06","pv_yield":3510.26,"import_kwh":4621.76,"self_consumption":3509.06,"consumption_kwh":8130.82,"co2_avoided":1.667}];
 
-const ANNUAL=[{year:2016,months:12,total_kva:277920,total_cost:1085444.16,avg_rate:3.93},{year:2017,months:12,total_kva:321320,total_cost:1243945.18,avg_rate:3.89},{year:2018,months:12,total_kva:315632,total_cost:1301461.91,avg_rate:4.12},{year:2019,months:12,total_kva:323552,total_cost:1320854.68,avg_rate:4.08},{year:2020,months:12,total_kva:329088,total_cost:1305911.47,avg_rate:3.98},{year:2021,months:12,total_kva:264176,total_cost:1131100.56,avg_rate:4.28},{year:2022,months:12,total_kva:273168,total_cost:1271411.53,avg_rate:4.7},{year:2023,months:12,total_kva:312432,total_cost:1595456.29,avg_rate:5.13},{year:2024,months:12,total_kva:303024,total_cost:1385597.97,avg_rate:4.58},{year:2025,months:12,total_kva:287912,total_cost:1323373.49,avg_rate:4.6},{year:2026,months:3,total_kva:68000,total_cost:296369.22,avg_rate:4.36}];
+const AVG_RATE=4.7085; // fallback average rate (2565+), used only when no matching PEA month
 
-const SOLAR_BY_YEAR={2022:{pv:20768,self:20748,imp:10787,co2:7.864,months:6},2023:{pv:36544,self:36532,imp:56586,co2:15.358,months:9},2024:{pv:85974,self:85957,imp:65190,co2:40.836,months:12},2025:{pv:117604,self:117581,imp:85163,co2:55.859,months:12},2026:{pv:42379,self:42367,imp:21830,co2:20.131,months:5}};
+// Dynamic: get actual PEA rate for a given period, fallback to average
+function getRateForPeriod(period){
+  const rec=DB.pea.find(d=>d.period===period);
+  return rec?rec.rate:AVG_RATE;
+}
 
-const AVG_RATE=4.73;
+// Compute total savings dynamically using per-month PEA rate
+function computeTotalSavings(){
+  return DB.solar.reduce((sum,s)=>sum+s.self_consumption*getRateForPeriod(s.period),0);
+}
+
+// Compute annual savings using per-month rate
+function computeAnnualSavings(){
+  const byYear={};
+  DB.solar.forEach(s=>{
+    const yr=parseInt(s.period.split('-')[0]);
+    if(!byYear[yr]) byYear[yr]=0;
+    byYear[yr]+=s.self_consumption*getRateForPeriod(s.period);
+  });
+  return byYear;
+}
 const SOLAR_START='2022-06';
-const SOLAR_IDX=PEA_DATA.findIndex(d=>d.period===SOLAR_START);
 
+// ==================== DATA MANAGER ====================
+const DB={
+  pea:[],solar:[],log:[],isBaseline:true,
+  load(){
+    try{
+      const sp=localStorage.getItem('ptt8_pea');
+      const ss=localStorage.getItem('ptt8_solar');
+      const sl=localStorage.getItem('ptt8_log');
+      if(sp&&ss){
+        this.pea=JSON.parse(sp);
+        this.solar=JSON.parse(ss);
+        this.log=sl?JSON.parse(sl):[];
+        this.isBaseline=false;
+      } else {
+        this.pea=[...BASELINE_PEA];
+        this.solar=[...BASELINE_SOLAR];
+        this.log=[];
+        this.isBaseline=true;
+      }
+    } catch(e){
+      this.pea=[...BASELINE_PEA];
+      this.solar=[...BASELINE_SOLAR];
+      this.log=[];
+      this.isBaseline=true;
+    }
+  },
+  save(){
+    try{
+      localStorage.setItem('ptt8_pea',JSON.stringify(this.pea));
+      localStorage.setItem('ptt8_solar',JSON.stringify(this.solar));
+      localStorage.setItem('ptt8_log',JSON.stringify(this.log));
+      this.isBaseline=false;
+    } catch(e){showToast('localStorage เต็ม — ลองล้างข้อมูลเก่าออกก่อน','error');}
+  },
+  reset(){
+    localStorage.removeItem('ptt8_pea');
+    localStorage.removeItem('ptt8_solar');
+    localStorage.removeItem('ptt8_log');
+    this.pea=[...BASELINE_PEA];
+    this.solar=[...BASELINE_SOLAR];
+    this.log=[];
+    this.isBaseline=true;
+  },
+  mergePEA(recs){
+    const m={};
+    this.pea.forEach(r=>m[r.period]=r);
+    recs.forEach(r=>m[r.period]=r);
+    this.pea=Object.values(m).sort((a,b)=>a.period.localeCompare(b.period));
+  },
+  mergeSolar(recs){
+    const m={};
+    this.solar.forEach(r=>m[r.period]=r);
+    recs.forEach(r=>{ if(r.pv_yield>0||r.import_kwh>0) m[r.period]=r; });
+    this.solar=Object.values(m).sort((a,b)=>a.period.localeCompare(b.period));
+  },
+  addLog(type,msg,count){
+    this.log.unshift({type,msg,count,time:new Date().toLocaleString('th-TH')});
+    if(this.log.length>50) this.log=this.log.slice(0,50);
+  }
+};
+
+// ==================== CHART REGISTRY ====================
+const CHARTS={};
+function destroyChart(id){if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id];}}
+function destroyAll(){Object.keys(CHARTS).forEach(k=>{CHARTS[k].destroy();delete CHARTS[k];});}
+
+// ==================== HELPERS ====================
 Chart.defaults.font.family="'Segoe UI','Noto Sans Thai',Arial,sans-serif";
 Chart.defaults.font.size=11;
 function fmt(n,d=0){return Number(n).toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d});}
 
-// Chart 1: Main Trend
-new Chart(document.getElementById('chartMainTrend'),{
-  type:'bar',
-  data:{labels:PEA_DATA.map(d=>d.period),datasets:[
-    {label:'ก่อน Solar',data:PEA_DATA.map((d,i)=>i<SOLAR_IDX?d.consumption_kva:null),backgroundColor:'rgba(36,113,163,0.7)',borderRadius:2},
-    {label:'หลัง Solar',data:PEA_DATA.map((d,i)=>i>=SOLAR_IDX?d.consumption_kva:null),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:2}
-  ]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)} kVA`}}},scales:{x:{ticks:{maxTicksLimit:18,maxRotation:45}},y:{title:{display:true,text:'kVA'},ticks:{callback:v=>fmt(v)}}}}
-});
-
-// Chart 2: Annual kVA
-new Chart(document.getElementById('chartAnnualKVA'),{
-  type:'bar',
-  data:{labels:ANNUAL.map(d=>`${d.year}`),datasets:[{label:'รวม kVA',data:ANNUAL.map(d=>d.total_kva),backgroundColor:ANNUAL.map(d=>d.year>=2022?'rgba(39,174,96,0.75)':'rgba(36,113,163,0.75)'),borderRadius:4}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} kVA`}}},scales:{y:{ticks:{callback:v=>(v/1000).toFixed(0)+'k'}}}}
-});
-
-// Chart 3: Rate
-new Chart(document.getElementById('chartRate'),{
-  type:'line',
-  data:{labels:ANNUAL.map(d=>`${d.year}`),datasets:[{label:'฿/kVA',data:ANNUAL.map(d=>d.avg_rate),borderColor:'#8e44ad',backgroundColor:'rgba(142,68,173,0.1)',fill:true,tension:0.3,pointRadius:5,pointBackgroundColor:ANNUAL.map(d=>d.year>=2022?'#27ae60':'#8e44ad')}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:3.5,ticks:{callback:v=>v.toFixed(2)}}}}
-});
-
-// Chart 4: B1 Donut
-(function(){
-  const tot_imp=SOLAR_DATA.reduce((a,s)=>a+s.import_kwh,0);
-  const tot_self=SOLAR_DATA.reduce((a,s)=>a+s.self_consumption,0);
-  new Chart(document.getElementById('chartB1Donut'),{
-    type:'doughnut',
-    data:{labels:['Import Grid (kWh)','Solar Self-use (kWh)'],datasets:[{data:[Math.round(tot_imp),Math.round(tot_self)],backgroundColor:['#2471a3','#f39c12'],borderWidth:2,borderColor:'#fff'}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>`${c.label}: ${fmt(c.raw)} kWh (${(c.raw/(tot_imp+tot_self)*100).toFixed(1)}%)`}}}}
+function computeAnnual(){
+  const yr={};
+  DB.pea.forEach(d=>{
+    if(!yr[d.year]) yr[d.year]={year:d.year,months:0,total_kva:0,total_cost:0,rates:[]};
+    yr[d.year].months++;
+    yr[d.year].total_kva+=d.consumption_kva||0;
+    yr[d.year].total_cost+=d.cost_baht||0;
+    yr[d.year].rates.push(d.rate||0);
   });
-})();
-
-// Chart 5: Year Compare
-(function(){
-  const yrs=['2559','2560','2561','2562','2563','2564','2565','2566','2567','2568'];
-  const ann10=ANNUAL.slice(0,10);
-  new Chart(document.getElementById('chartYearCompare'),{
-    type:'bar',
-    data:{labels:yrs,datasets:[
-      {type:'line',label:'Main PEA (kVA)',data:ann10.map(d=>d.total_kva),borderColor:'#2471a3',backgroundColor:'transparent',yAxisID:'y1',tension:0.3,pointRadius:5,borderWidth:2,order:0},
-      {label:'B1 Import Grid',data:yrs.map((_,i)=>SOLAR_BY_YEAR[2016+i]?SOLAR_BY_YEAR[2016+i].imp:null),backgroundColor:'rgba(231,76,60,0.75)',yAxisID:'y2',borderRadius:3,order:1},
-      {label:'B1 Solar Self-use',data:yrs.map((_,i)=>SOLAR_BY_YEAR[2016+i]?SOLAR_BY_YEAR[2016+i].self:null),backgroundColor:'rgba(243,156,18,0.75)',yAxisID:'y2',borderRadius:3,order:2}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>c.dataset.type==='line'?`${c.label}: ${fmt(c.raw)} kVA`:`${c.dataset.label}: ${fmt(c.raw)} kWh`}}},scales:{y1:{type:'linear',position:'left',title:{display:true,text:'kVA'},ticks:{callback:v=>(v/1000).toFixed(0)+'k'}},y2:{type:'linear',position:'right',title:{display:true,text:'kWh (B1)'},grid:{drawOnChartArea:false},ticks:{callback:v=>v?(v/1000).toFixed(0)+'k':''}}}}
-  });
-})();
-
-// Pie charts
-function makePie(id,imp,self){
-  new Chart(document.getElementById(id),{type:'doughnut',data:{labels:['Grid Import','Solar'],datasets:[{data:[Math.round(imp),Math.round(self)],backgroundColor:['#2471a3','#f39c12'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmt(c.raw)} kWh (${(c.raw/(imp+self)*100).toFixed(1)}%)`}}}}});
+  return Object.values(yr).map(d=>({...d,avg_rate:d.rates.reduce((a,b)=>a+b,0)/d.rates.length})).sort((a,b)=>a.year-b.year);
 }
-makePie('chartPie2022',SOLAR_BY_YEAR[2022].imp,SOLAR_BY_YEAR[2022].self);
-makePie('chartPie2024',SOLAR_BY_YEAR[2024].imp,SOLAR_BY_YEAR[2024].self);
-makePie('chartPie2025',SOLAR_BY_YEAR[2025].imp,SOLAR_BY_YEAR[2025].self);
 
-// Solar Monthly
-new Chart(document.getElementById('chartSolarMonthly'),{
-  type:'bar',
-  data:{labels:SOLAR_DATA.map(s=>s.period),datasets:[
-    {label:'PV Yield',data:SOLAR_DATA.map(s=>s.pv_yield),backgroundColor:'rgba(243,156,18,0.8)',borderRadius:2},
-    {label:'Import Grid',data:SOLAR_DATA.map(s=>s.import_kwh),backgroundColor:'rgba(36,113,163,0.7)',borderRadius:2}
-  ]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)} kWh`}}},scales:{x:{ticks:{maxTicksLimit:14,maxRotation:45}},y:{title:{display:true,text:'kWh'},ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}}}
-});
-
-// CO2 cumulative
-(function(){
-  let cum=0;const cumD=SOLAR_DATA.map(s=>{cum+=s.co2_avoided;return +cum.toFixed(3);});
-  new Chart(document.getElementById('chartCO2'),{
-    type:'line',
-    data:{labels:SOLAR_DATA.map(s=>s.period),datasets:[
-      {label:'CO₂ สะสม (ตัน)',data:cumD,borderColor:'#27ae60',backgroundColor:'rgba(39,174,96,0.15)',fill:true,tension:0.3,pointRadius:3},
-      {label:'CO₂/เดือน',data:SOLAR_DATA.map(s=>s.co2_avoided),borderColor:'#abebc6',backgroundColor:'transparent',borderDash:[4,2],tension:0.3,pointRadius:2}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{ticks:{maxTicksLimit:12,maxRotation:45}},y:{title:{display:true,text:'ตัน CO₂'}}}}
+function computeSolarByYear(){
+  const m={};
+  DB.solar.forEach(s=>{
+    const yr=parseInt(s.period.split('-')[0]);
+    if(!m[yr]) m[yr]={pv:0,self:0,imp:0,co2:0,months:0};
+    m[yr].pv+=s.pv_yield||0;
+    m[yr].self+=s.self_consumption||0;
+    m[yr].imp+=s.import_kwh||0;
+    m[yr].co2+=s.co2_avoided||0;
+    m[yr].months++;
   });
-})();
+  return m;
+}
 
-// Solar Annual
-(function(){
-  const yrs=Object.keys(SOLAR_BY_YEAR).map(Number);
-  new Chart(document.getElementById('chartSolarAnnual'),{
+// ==================== STATUS UPDATE ====================
+function updateStatus(){
+  const annual=computeAnnual();
+  const solarByYear=computeSolarByYear();
+  const validSolar=DB.solar.filter(s=>s.pv_yield>0);
+
+  // Status bar
+  document.getElementById('sb-pea').textContent=`${DB.pea.length} รายการ`;
+  document.getElementById('sb-solar').textContent=`${validSolar.length} รายการ (${DB.solar.length} เดือน)`;
+  document.getElementById('dot-pea').className='status-dot'+(DB.isBaseline?' base':'');
+  document.getElementById('dot-solar').className='status-dot'+(DB.isBaseline?' base':'');
+  if(DB.log.length>0) document.getElementById('sb-update').textContent='อัปเดตล่าสุด: '+DB.log[0].time;
+  document.getElementById('hdr-source').textContent=DB.isBaseline?'📂 Baseline':'💾 นำเข้าแล้ว';
+
+  // Header range
+  if(DB.pea.length>0){
+    const yrs=DB.pea.map(d=>d.year);
+    document.getElementById('hdr-range').textContent=`ข้อมูล: ${Math.min(...yrs)} – ${Math.max(...yrs)}`;
+  }
+
+  // KPI
+  const totalKVA=annual.filter(d=>d.year>=2016&&d.year<=2025).reduce((a,d)=>a+d.total_kva,0);
+  const totalPV=validSolar.reduce((a,s)=>a+s.pv_yield,0);
+  const totalSelf=validSolar.reduce((a,s)=>a+s.self_consumption,0);
+  const totalCO2=validSolar.reduce((a,s)=>a+s.co2_avoided,0);
+  document.getElementById('kpi-total-kva').textContent=totalKVA>1000000?(totalKVA/1000000).toFixed(2)+'M':fmt(totalKVA);
+  document.getElementById('kpi-solar-total').textContent=fmt(Math.round(totalPV));
+  document.getElementById('kpi-savings').textContent=(computeTotalSavings()/1000000).toFixed(2)+' ล้าน';
+  document.getElementById('kpi-co2').textContent=totalCO2.toFixed(1);
+  document.getElementById('kpi-self-rate').textContent=totalPV>0?(totalSelf/totalPV*100).toFixed(1)+'%':'—';
+
+  // Solar gauges
+  document.getElementById('g-pv').textContent=fmt(Math.round(totalPV));
+  document.getElementById('g-rate').textContent=totalPV>0?(totalSelf/totalPV*100).toFixed(1)+'%':'—';
+  document.getElementById('g-co2').textContent=totalCO2.toFixed(2);
+  document.getElementById('g-save').textContent=(computeTotalSavings()/1000000).toFixed(2)+'M';
+
+  // Derived metrics: Specific Yield, Solar Coverage, YTD
+  const totalCons=DB.solar.reduce((a,s)=>a+s.consumption_kwh,0);
+  const SYSTEM_KWP=134.07;
+  const validMonths=validSolar.length;
+  const specYield=validMonths>0?Math.round(totalPV/SYSTEM_KWP/(validMonths/12)):0;
+  const solarCoverage=totalCons>0?(totalSelf/totalCons*100).toFixed(1):'—';
+  const thisYear=String(new Date().getFullYear());
+  const ytdPV=DB.solar.filter(s=>s.period.startsWith(thisYear)).reduce((a,s)=>a+s.pv_yield,0);
+  const gSpec=document.getElementById('g-spec-yield');
+  const gCover=document.getElementById('g-solar-cover');
+  const gYtd=document.getElementById('g-ytd-pv');
+  if(gSpec)gSpec.textContent=specYield>0?fmt(specYield)+'':'—';
+  if(gCover)gCover.textContent=solarCoverage!=='—'?solarCoverage+'%':'—';
+  if(gYtd)gYtd.textContent=fmt(Math.round(ytdPV));
+  // Update rec-card dynamic spans
+  const rcCover=document.getElementById('rc-solar-cover');
+  const rcCo2T=document.getElementById('rc-co2-total');
+  if(rcCover)rcCover.textContent=solarCoverage!=='—'?solarCoverage:'—';
+  if(rcCo2T)rcCo2T.textContent=totalCO2.toFixed(1);
+
+  // Comparison cards
+  const solarIdx=DB.pea.findIndex(d=>d.period===SOLAR_START);
+  if(solarIdx>0){
+    const pre=DB.pea.slice(0,solarIdx);
+    const post=DB.pea.slice(solarIdx);
+    const avgPreKVA=pre.reduce((a,d)=>a+d.consumption_kva,0)/pre.length;
+    const avgPostKVA=post.reduce((a,d)=>a+d.consumption_kva,0)/post.length;
+    const avgPreCost=pre.reduce((a,d)=>a+d.cost_baht,0)/pre.length;
+    const avgPostCost=post.reduce((a,d)=>a+d.cost_baht,0)/post.length;
+    document.getElementById('cmp-pre-kva').textContent=fmt(Math.round(avgPreKVA));
+    document.getElementById('cmp-post-kva').textContent=fmt(Math.round(avgPostKVA));
+    document.getElementById('cmp-pre-cost').textContent=`ค่าไฟเฉลี่ย ${fmt(Math.round(avgPreCost))} ฿/เดือน`;
+    document.getElementById('cmp-post-cost').textContent=`ค่าไฟเฉลี่ย ${fmt(Math.round(avgPostCost))} ฿/เดือน`;
+    const diff=((avgPostKVA-avgPreKVA)/avgPreKVA*100);
+    document.getElementById('insightCompare').innerHTML=`&#x26A0;&#xFE0F; ค่าไฟ Main PEA <em>หลัง Solar สูงขึ้น</em> เนื่องจากอัตราค่าไฟปรับขึ้นมาก ไม่ใช่เพราะใช้ไฟมากขึ้น — การใช้ไฟ <strong>${diff<0?'ลดลง':'เพิ่มขึ้น'} ${Math.abs(diff).toFixed(1)}%</strong>`;
+    document.getElementById('insightOverview').innerHTML=`&#x1F4A1; <strong>ข้อสังเกต:</strong> เฉลี่ยก่อน Solar <strong>${fmt(Math.round(avgPreKVA))} kVA/เดือน</strong> → หลัง Solar <strong>${fmt(Math.round(avgPostKVA))} kVA/เดือน</strong> เปลี่ยนแปลง <strong>${diff.toFixed(1)}%</strong>`;
+  }
+
+  // Cost insight
+  const maxCostYear=annual.reduce((a,b)=>a.total_cost>b.total_cost?a:b,{total_cost:0});
+  document.getElementById('insightCost').innerHTML=`&#x1F4B0; <strong>ยอดสูงสุดปี ${maxCostYear.year}:</strong> ${fmt(Math.round(maxCostYear.total_cost))} บาท — ค่าไฟฟ้าสูงสุดในรอบการบันทึก`;
+
+  updateImportLog();
+}
+
+// ==================== RENDER CHARTS ====================
+function renderCharts(){
+  destroyAll();
+  const annual=computeAnnual();
+  const solarByYear=computeSolarByYear();
+  const solarIdx=DB.pea.findIndex(d=>d.period===SOLAR_START);
+
+  // --- Overview: Main Trend ---
+  CHARTS.mainTrend=new Chart(document.getElementById('chartMainTrend'),{
     type:'bar',
-    data:{labels:yrs.map(y=>`${y}`),datasets:[
-      {label:'PV Yield (kWh)',data:yrs.map(y=>SOLAR_BY_YEAR[y].pv),backgroundColor:'rgba(243,156,18,0.8)',borderRadius:4},
-      {label:'Import Grid (kWh)',data:yrs.map(y=>SOLAR_BY_YEAR[y].imp),backgroundColor:'rgba(36,113,163,0.7)',borderRadius:4}
+    data:{labels:DB.pea.map(d=>d.period),datasets:[
+      {label:'ก่อน Solar',data:DB.pea.map((d,i)=>i<solarIdx?d.consumption_kva:null),backgroundColor:'rgba(36,113,163,0.7)',borderRadius:2},
+      {label:'หลัง Solar',data:DB.pea.map((d,i)=>i>=solarIdx?d.consumption_kva:null),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)} kVA`}}},scales:{x:{ticks:{maxTicksLimit:18,maxRotation:45}},y:{ticks:{callback:v=>fmt(v)}}}}
+  });
+
+  // --- Annual KVA ---
+  CHARTS.annualKVA=new Chart(document.getElementById('chartAnnualKVA'),{
+    type:'bar',
+    data:{labels:annual.map(d=>`${d.year}`),datasets:[{label:'รวม kVA',data:annual.map(d=>d.total_kva),backgroundColor:annual.map(d=>d.year>=2022?'rgba(39,174,96,0.75)':'rgba(36,113,163,0.75)'),borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} kVA`}}},scales:{y:{ticks:{callback:v=>(v/1000).toFixed(0)+'k'}}}}
+  });
+
+  // --- Rate ---
+  CHARTS.rate=new Chart(document.getElementById('chartRate'),{
+    type:'line',
+    data:{labels:annual.map(d=>`${d.year}`),datasets:[{label:'฿/kVA',data:annual.map(d=>+d.avg_rate.toFixed(2)),borderColor:'#8e44ad',backgroundColor:'rgba(142,68,173,0.1)',fill:true,tension:0.3,pointRadius:5,pointBackgroundColor:annual.map(d=>d.year>=2022?'#27ae60':'#8e44ad')}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:3,ticks:{callback:v=>v.toFixed(2)}}}}
+  });
+
+  // --- B1 Donut ---
+  const ti=DB.solar.reduce((a,s)=>a+s.import_kwh,0);
+  const ts=DB.solar.reduce((a,s)=>a+s.self_consumption,0);
+  CHARTS.b1Donut=new Chart(document.getElementById('chartB1Donut'),{
+    type:'doughnut',
+    data:{labels:['Import Grid','Solar Self-use'],datasets:[{data:[Math.round(ti),Math.round(ts)],backgroundColor:['#2471a3','#f39c12'],borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>`${c.label}: ${fmt(c.raw)} kWh (${(c.raw/(ti+ts)*100).toFixed(1)}%)`}}}}
+  });
+
+  // --- Year Compare ---
+  const ann10=annual.filter(d=>d.year>=2016&&d.year<=2025);
+  const yrLabels=ann10.map(d=>`${d.year}`);
+  CHARTS.yearCompare=new Chart(document.getElementById('chartYearCompare'),{
+    type:'bar',
+    data:{labels:yrLabels,datasets:[
+      {type:'line',label:'Main PEA (kVA)',data:ann10.map(d=>d.total_kva),borderColor:'#2471a3',backgroundColor:'transparent',yAxisID:'y1',tension:0.3,pointRadius:5,borderWidth:2,order:0},
+      {label:'B1 Import Grid',data:ann10.map(d=>solarByYear[d.year]?solarByYear[d.year].imp:null),backgroundColor:'rgba(231,76,60,0.75)',yAxisID:'y2',borderRadius:3,order:1},
+      {label:'B1 Solar Self-use',data:ann10.map(d=>solarByYear[d.year]?solarByYear[d.year].self:null),backgroundColor:'rgba(243,156,18,0.75)',yAxisID:'y2',borderRadius:3,order:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{y1:{type:'linear',position:'left',title:{display:true,text:'kVA'},ticks:{callback:v=>(v/1000).toFixed(0)+'k'}},y2:{type:'linear',position:'right',title:{display:true,text:'kWh (B1)'},grid:{drawOnChartArea:false},ticks:{callback:v=>v?(v/1000).toFixed(0)+'k':''}}}}
+  });
+
+  // --- Pie charts ---
+  function makePie(id,yr){
+    const d=solarByYear[yr];
+    if(!d||d.imp+d.self===0){
+      const ctx=document.getElementById(id).getContext('2d');
+      ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+      ctx.fillStyle='#ccc'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+      ctx.fillText('ไม่มีข้อมูล',ctx.canvas.width/2,ctx.canvas.height/2);
+      return;
+    }
+    CHARTS['pie'+yr]=new Chart(document.getElementById(id),{type:'doughnut',data:{labels:['Grid','Solar'],datasets:[{data:[Math.round(d.imp),Math.round(d.self)],backgroundColor:['#2471a3','#f39c12'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmt(c.raw)} kWh (${(c.raw/(d.imp+d.self)*100).toFixed(1)}%)`}}}}});
+  }
+  makePie('chartPie2022',2022);makePie('chartPie2024',2024);makePie('chartPie2025',2025);
+
+  // --- Solar Monthly ---
+  const validS=DB.solar.filter(s=>s.pv_yield>0||s.import_kwh>0);
+  CHARTS.solarMonthly=new Chart(document.getElementById('chartSolarMonthly'),{
+    type:'bar',
+    data:{labels:validS.map(s=>s.period),datasets:[
+      {label:'PV Yield',data:validS.map(s=>s.pv_yield),backgroundColor:'rgba(243,156,18,0.8)',borderRadius:2},
+      {label:'Import Grid',data:validS.map(s=>s.import_kwh),backgroundColor:'rgba(36,113,163,0.7)',borderRadius:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)} kWh`}}},scales:{x:{ticks:{maxTicksLimit:14,maxRotation:45}},y:{ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}}}
+  });
+
+  // --- CO2 ---
+  let cum=0;const cumD=validS.map(s=>{cum+=s.co2_avoided;return +cum.toFixed(3);});
+  CHARTS.co2=new Chart(document.getElementById('chartCO2'),{
+    type:'line',
+    data:{labels:validS.map(s=>s.period),datasets:[
+      {label:'CO₂ สะสม (t)',data:cumD,borderColor:'#27ae60',backgroundColor:'rgba(39,174,96,0.15)',fill:true,tension:0.3,pointRadius:2},
+      {label:'CO₂/เดือน',data:validS.map(s=>s.co2_avoided),borderColor:'#abebc6',borderDash:[4,2],tension:0.3,pointRadius:0}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{ticks:{maxTicksLimit:12,maxRotation:45}}}}
+  });
+
+  // --- Solar Annual ---
+  const syrs=Object.keys(solarByYear).map(Number).sort();
+  CHARTS.solarAnnual=new Chart(document.getElementById('chartSolarAnnual'),{
+    type:'bar',
+    data:{labels:syrs.map(y=>`${y}`),datasets:[
+      {label:'PV Yield (kWh)',data:syrs.map(y=>solarByYear[y].pv),backgroundColor:'rgba(243,156,18,0.8)',borderRadius:4},
+      {label:'Import Grid (kWh)',data:syrs.map(y=>solarByYear[y].imp),backgroundColor:'rgba(36,113,163,0.7)',borderRadius:4}
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)} kWh`}}},scales:{y:{ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}}}
   });
-})();
 
-// Cost Monthly
-new Chart(document.getElementById('chartCost'),{
-  type:'line',
-  data:{labels:PEA_DATA.map(d=>d.period),datasets:[
-    {label:'ค่าไฟ (฿)',data:PEA_DATA.map(d=>d.cost_baht),borderColor:'#8e44ad',backgroundColor:'rgba(142,68,173,0.1)',fill:true,tension:0.3,pointRadius:2}
-  ]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} บาท`}}},scales:{x:{ticks:{maxTicksLimit:18,maxRotation:45}},y:{ticks:{callback:v=>(v/1000).toFixed(0)+'k'},title:{display:true,text:'บาท'}}}}
-});
+  // --- Cost ---
+  CHARTS.cost=new Chart(document.getElementById('chartCost'),{
+    type:'line',
+    data:{labels:DB.pea.map(d=>d.period),datasets:[{label:'ค่าไฟ (฿)',data:DB.pea.map(d=>d.cost_baht),borderColor:'#8e44ad',backgroundColor:'rgba(142,68,173,0.1)',fill:true,tension:0.3,pointRadius:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} บาท`}}},scales:{x:{ticks:{maxTicksLimit:18,maxRotation:45}},y:{ticks:{callback:v=>(v/1000).toFixed(0)+'k'}}}}
+  });
 
-// Annual Cost
-new Chart(document.getElementById('chartAnnualCost'),{
-  type:'bar',
-  data:{labels:ANNUAL.map(d=>`${d.year}`),datasets:[{label:'ค่าไฟรวม (฿)',data:ANNUAL.map(d=>d.total_cost),backgroundColor:ANNUAL.map(d=>d.year>=2022?'rgba(39,174,96,0.75)':'rgba(142,68,173,0.65)'),borderRadius:4}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} บาท`}}},scales:{y:{ticks:{callback:v=>(v/1000000).toFixed(2)+'M'}}}}
-});
-
-// Savings
-(function(){
-  const yrs=Object.keys(SOLAR_BY_YEAR).map(Number);
-  new Chart(document.getElementById('chartSavings'),{
+  // --- Annual Cost ---
+  CHARTS.annualCost=new Chart(document.getElementById('chartAnnualCost'),{
     type:'bar',
-    data:{labels:yrs.map(y=>`${y}`),datasets:[{label:'ประหยัด (฿)',data:yrs.map(y=>Math.round(SOLAR_BY_YEAR[y].self*AVG_RATE)),backgroundColor:'rgba(39,174,96,0.8)',borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} บาท`}}},scales:{y:{ticks:{callback:v=>(v/1000).toFixed(0)+'k'},title:{display:true,text:'บาท'}}}}
+    data:{labels:annual.map(d=>`${d.year}`),datasets:[{label:'ค่าไฟรวม',data:annual.map(d=>d.total_cost),backgroundColor:annual.map(d=>d.year>=2022?'rgba(39,174,96,0.75)':'rgba(142,68,173,0.65)'),borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} บาท`}}},scales:{y:{ticks:{callback:v=>(v/1000000).toFixed(2)+'M'}}}}
   });
-})();
 
-// Tables
-(function(){
-  const tbody=document.getElementById('costTableBody');
-  ANNUAL.forEach(d=>{
-    const s=SOLAR_BY_YEAR[d.year];
-    const pv=s?fmt(s.pv):'-';
-    const sv=s?`<strong style="color:#1e8449">${fmt(Math.round(s.self*AVG_RATE))}</strong>`:'-';
-    const note=d.year<2022?'<span class="tag tag-pre">ก่อน Solar</span>':d.year===2022?'<span class="tag tag-solar">เริ่ม Solar มิ.ย.</span>':'<span class="tag tag-solar">มี Solar</span>';
-    tbody.innerHTML+=`<tr><td>${d.year}${d.months<12?` (${d.months} เดือน)`:''}</td><td class="num">${fmt(d.total_cost)}</td><td class="num">${fmt(d.total_kva)}</td><td class="num">${d.avg_rate.toFixed(2)}</td><td class="num">${pv}</td><td class="num">${sv}</td><td>${note}</td></tr>`;
+  // --- Savings ---
+  CHARTS.savings=new Chart(document.getElementById('chartSavings'),{
+    type:'bar',
+    data:(()=>{
+    const annSav=computeAnnualSavings();
+    return {labels:syrs.map(y=>`${y}`),datasets:[{label:'ประหยัด (฿)',data:syrs.map(y=>Math.round(annSav[y]||0)),backgroundColor:'rgba(39,174,96,0.8)',borderRadius:4}]};
+  })(),
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} บาท`}}},scales:{y:{ticks:{callback:v=>(v/1000).toFixed(0)+'k'}}}}
   });
-})();
-(function(){
-  const tbody=document.getElementById('peaTableBody');
-  [...PEA_DATA].reverse().forEach(d=>{
+
+  renderTables();
+}
+
+// ==================== RENDER TABLES ====================
+function renderTables(){
+  const annual=computeAnnual();
+  const solarByYear=computeSolarByYear();
+
+  // Cost summary
+  const cb=document.getElementById('costTableBody'); cb.innerHTML='';
+  annual.forEach(d=>{
+    const s=solarByYear[d.year];
+    const pv=s?fmt(Math.round(s.pv)):'-';
+    const annSav2=computeAnnualSavings();const sv=s?`<strong style="color:#1e8449">${fmt(Math.round(annSav2[d.year]||0))}</strong>`:'-';
+    const note=d.year<2022?'<span class="tag tag-pre">ก่อน Solar</span>':d.year===2022?'<span class="tag tag-solar">เริ่ม Solar</span>':'<span class="tag tag-solar">มี Solar</span>';
+    cb.innerHTML+=`<tr><td>${d.year}${d.months<12?` (${d.months}ด)`:''}</td><td class="num">${fmt(Math.round(d.total_cost))}</td><td class="num">${fmt(d.total_kva)}</td><td class="num">${d.avg_rate.toFixed(2)}</td><td class="num">${pv}</td><td class="num">${sv}</td><td>${note}</td></tr>`;
+  });
+
+  // PEA table
+  const pb=document.getElementById('peaTableBody'); pb.innerHTML='';
+  [...DB.pea].reverse().forEach(d=>{
     const solar=d.year>2022||(d.year===2022&&d.month>=6);
-    tbody.innerHTML+=`<tr><td>${d.period}${solar?' <span class="tag tag-solar">Solar</span>':''}</td><td class="num">${fmt(d.consumption_kva)}</td><td class="num">${fmt(d.cost_baht)}</td><td class="num">${d.rate.toFixed(4)}</td></tr>`;
+    pb.innerHTML+=`<tr><td>${d.period}${solar?' <span class="tag tag-solar">S</span>':''}</td><td class="num">${fmt(d.consumption_kva)}</td><td class="num">${fmt(d.cost_baht)}</td><td class="num">${d.rate.toFixed(3)}</td></tr>`;
   });
-})();
-(function(){
-  const tbody=document.getElementById('solarTableBody');
-  [...SOLAR_DATA].reverse().forEach(s=>{
-    tbody.innerHTML+=`<tr><td>${s.period}</td><td class="num">${fmt(s.pv_yield)}</td><td class="num">${fmt(s.import_kwh)}</td><td class="num">${fmt(s.self_consumption)}</td><td class="num">${fmt(s.consumption_kwh)}</td><td class="num">${s.co2_avoided.toFixed(3)}</td></tr>`;
+
+  // Solar table
+  const sb=document.getElementById('solarTableBody'); sb.innerHTML='';
+  [...DB.solar].reverse().forEach(s=>{
+    sb.innerHTML+=`<tr><td>${s.period}</td><td class="num">${fmt(s.pv_yield)}</td><td class="num">${fmt(s.import_kwh)}</td><td class="num">${fmt(s.self_consumption)}</td><td class="num">${fmt(s.consumption_kwh)}</td><td class="num">${s.co2_avoided.toFixed(3)}</td></tr>`;
   });
-})();
+}
+
+// ==================== IMPORT LOGIC ====================
+function dzOver(e,id){e.preventDefault();document.getElementById(id).classList.add('drag-over');}
+function dzLeave(id){document.getElementById(id).classList.remove('drag-over');}
+function dzDrop(e,type){
+  e.preventDefault();
+  const id=type==='pea'?'dz-pea':'dz-solar';
+  document.getElementById(id).classList.remove('drag-over');
+  const files=Array.from(e.dataTransfer.files).filter(f=>f.name.match(/\.xlsx?$/i));
+  if(!files.length){showToast('กรุณาเลือกไฟล์ .xlsx หรือ .xls เท่านั้น','warn');return;}
+  processFiles(files,type);
+}
+function fileSelected(inp,type){
+  const files=Array.from(inp.files);
+  if(!files.length) return;
+  processFiles(files,type);
+  inp.value='';
+}
+
+function processFiles(files,type){
+  showProgress(`กำลังอ่านไฟล์ Excel (${files.length} ไฟล์)`,'ประมวลผลข้อมูล...');
+  const stId=type==='pea'?'st-pea':'st-solar';
+  const dzId=type==='pea'?'dz-pea':'dz-solar';
+  setStatus(stId,'&#x23F3; กำลังประมวลผล...','loading');
+
+  setTimeout(()=>{
+    try{
+      let totalNew=0;
+      for(const file of files){
+        const wb=XLSX.read(readFileSyncBuf(file),{type:'array'});
+        if(type==='pea'){
+          const recs=parsePEAWorkbook(wb,file.name);
+          DB.mergePEA(recs);
+          totalNew+=recs.length;
+        } else {
+          const recs=parseSolarWorkbook(wb,file.name);
+          DB.mergeSolar(recs);
+          totalNew+=recs.length;
+        }
+      }
+      DB.addLog(type,`${files.map(f=>f.name).join(', ')}`,totalNew);
+      DB.save();
+      setStatus(stId,`&#x2705; นำเข้าสำเร็จ ${totalNew} รายการ จาก ${files.length} ไฟล์`,'ok');
+      document.getElementById(dzId).classList.add('success');
+      hideProgress();
+      showToast(`&#x2705; นำเข้าข้อมูล${type==='pea'?'Main PEA':'Solar'} สำเร็จ — ${totalNew} รายการ`);
+      refreshDashboard();
+    } catch(err){
+      hideProgress();
+      setStatus(stId,`&#x274C; ${err.message}`,'err');
+      document.getElementById(dzId).classList.add('error');
+      showToast(err.message,'error');
+    }
+  },50);
+}
+
+// Read file synchronously using FileReaderSync or ArrayBuffer
+function readFileSyncBuf(file){
+  const xhr=new XMLHttpRequest();
+  // We use FileReader in synchronous mode via a workaround
+  return new Uint8Array(readFileSync(file));
+}
+
+function readFileSync(file){
+  // Using synchronous XMLHttpRequest on blob URL
+  const url=URL.createObjectURL(file);
+  const xhr=new XMLHttpRequest();
+  xhr.open('GET',url,false);
+  xhr.responseType='arraybuffer';
+  xhr.send();
+  URL.revokeObjectURL(url);
+  return xhr.response;
+}
+
+function parsePEAWorkbook(wb,fname){
+  const sheetName=wb.SheetNames.find(n=>n.toLowerCase().includes('electric_data')||n.toLowerCase().includes('electric'));
+  if(!sheetName) throw new Error(`ไม่พบ Sheet 'electric_data' ในไฟล์ ${fname}`);
+  const ws=wb.Sheets[sheetName];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null});
+  // Auto-detect header row: look for row containing 'year' or 'consumption'
+  let dataStart=2;
+  for(let i=0;i<Math.min(rows.length,5);i++){
+    const r=rows[i];
+    if(r&&r.some(c=>c&&String(c).toLowerCase().includes('year'))) {dataStart=i+2;break;}
+    if(r&&r.some(c=>c&&String(c).toLowerCase().includes('consumption'))) {dataStart=i+2;break;}
+  }
+  // Col indices: id=0,year=1,month_num=2,month_th=3,month_en=4,period=5,consumption_kva=6,cost_baht=7,rate=8
+  const recs=[];
+  for(let i=dataStart;i<rows.length;i++){
+    const r=rows[i];
+    if(!r||r[0]==null) continue;
+    const yr=parseInt(r[1]);
+    const mo=parseInt(r[2]);
+    const period=String(r[5]||'').trim();
+    const kva=parseFloat(r[6])||0;
+    const cost=parseFloat(r[7])||0;
+    const rate=parseFloat(r[8])||0;
+    if(!yr||!mo||!period||kva===0) continue;
+    recs.push({year:yr,month:mo,period,consumption_kva:kva,cost_baht:cost,rate});
+  }
+  if(!recs.length) throw new Error(`ไม่พบข้อมูลใน ${fname} — ตรวจสอบโครงสร้าง Sheet`);
+  return recs;
+}
+
+function parseSolarWorkbook(wb,fname){
+  const ws=wb.Sheets['Sheet1']||wb.Sheets[wb.SheetNames[0]];
+  if(!ws) throw new Error(`ไม่พบ Sheet ในไฟล์ ${fname}`);
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null});
+  // Find header row (contains "Statistical Period")
+  let hdrRow=-1;
+  for(let i=0;i<Math.min(rows.length,5);i++){
+    if(rows[i]&&rows[i].some(c=>c&&String(c).toLowerCase().includes('statistical'))) {hdrRow=i;break;}
+  }
+  if(hdrRow<0) throw new Error(`ไม่พบ Header Row ใน ${fname} — ต้องมีคอลัมน์ 'Statistical Period'`);
+  const headers=rows[hdrRow].map(h=>h?String(h).trim():'');
+  const idx={};
+  headers.forEach((h,i)=>idx[h]=i);
+  const pIdx=idx['Statistical Period']??0;
+  const pvIdx=idx['PV Yield (kWh)']??6;
+  const impIdx=idx['Import (kWh)']??9;
+  const selfIdx=idx['Self-consumption (kWh)']??14;
+  const conIdx=idx['Consumption (kWh)']??13;
+  const co2Idx=idx['²'.length>0?'CO₂ Avoided (t)':'CO2 Avoided (t)']??18;
+  // Try both CO2 variants
+  const co2I=idx['CO₂ Avoided (t)']??idx['CO2 Avoided (t)']??18;
+  const recs=[];
+  for(let i=hdrRow+1;i<rows.length;i++){
+    const r=rows[i];
+    if(!r||!r[pIdx]) continue;
+    const period=String(r[pIdx]).trim();
+    if(!period.match(/^\d{4}-\d{2}$/)) continue;
+    const pv=parseFloat(r[pvIdx])||0;
+    const imp=parseFloat(r[impIdx])||0;
+    const self=parseFloat(r[selfIdx])||0;
+    const con=parseFloat(r[conIdx])||0;
+    const co2=parseFloat(r[co2I])||0;
+    recs.push({period,pv_yield:pv,import_kwh:imp,self_consumption:self,consumption_kwh:con,co2_avoided:co2});
+  }
+  if(!recs.length) throw new Error(`ไม่พบข้อมูลที่ถูกต้องใน ${fname}`);
+  return recs;
+}
+
+// ==================== IMPORT LOG ====================
+function updateImportLog(){
+  const list=document.getElementById('importLogList');
+  document.getElementById('log-count').textContent=`${DB.log.length} รายการ`;
+  if(!DB.log.length){
+    list.innerHTML='<div class="log-empty">&#x1F4ED; ยังไม่มีประวัติการนำเข้า — ใช้ข้อมูล Baseline</div>';
+    return;
+  }
+  list.innerHTML=DB.log.map(l=>`
+    <div class="log-item">
+      <div class="log-icon">${l.type==='pea'?'&#x1F4CA;':'&#x2600;&#xFE0F;'}</div>
+      <div class="log-text">
+        <strong>${l.type==='pea'?'Main PEA':'Solar B1'}</strong> — ${l.msg}<br>
+        <span style="color:var(--green)">${l.count} รายการ</span>
+      </div>
+      <div class="log-time">${l.time}</div>
+    </div>`).join('');
+}
+
+// ==================== UTILS ====================
+function showProgress(title,msg){
+  document.getElementById('progressTitle').textContent=title;
+  document.getElementById('progressMsg').textContent=msg;
+  document.getElementById('progressOverlay').classList.add('show');
+}
+function hideProgress(){document.getElementById('progressOverlay').classList.remove('show');}
+
+let toastTimer;
+function showToast(msg,type=''){
+  clearTimeout(toastTimer);
+  const t=document.getElementById('toast');
+  t.innerHTML=msg;
+  t.className='toast'+(type?' '+type:'')+' show';
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+function setStatus(id,msg,cls){
+  const el=document.getElementById(id);
+  el.innerHTML=msg;
+  el.className='dz-status '+cls;
+  el.style.display='block';
+}
+
+function refreshDashboard(){
+  showProgress('กำลังอัปเดต Dashboard','กรุณารอสักครู่...');
+  setTimeout(()=>{updateStatus();renderCharts();hideProgress();showToast('&#x1F504; อัปเดต Dashboard สำเร็จ');},100);
+}
+
+function confirmReset(){
+  if(confirm('Reset ข้อมูลทั้งหมดกลับเป็น Baseline?\n\nข้อมูลที่นำเข้าทั้งหมดจะหายไป')){
+    DB.reset();
+    document.getElementById('dz-pea').className='drop-zone';
+    document.getElementById('dz-solar').className='drop-zone';
+    document.getElementById('st-pea').style.display='none';
+    document.getElementById('st-solar').style.display='none';
+    refreshDashboard();
+    showToast('&#x1F504; Reset เป็น Baseline สำเร็จ','warn');
+  }
+}
+
+function exportCurrentData(){
+  const data={pea:DB.pea,solar:DB.solar,exported:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`ptt8_energy_data_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('&#x1F4E4; Export JSON สำเร็จ');
+}
 
 function switchTab(name,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -535,6 +1035,13 @@ function switchTab(name,el){
   document.getElementById('tab-'+name).classList.add('active');
   el.classList.add('active');
 }
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded',()=>{
+  DB.load();
+  updateStatus();
+  renderCharts();
+});
 </script>
 </body>
 </html>
